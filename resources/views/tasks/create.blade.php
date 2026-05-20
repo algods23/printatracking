@@ -39,6 +39,7 @@
                     @enderror
                 </div>
 
+                @if(auth()->user()->isAdmin())
                 <!-- Assign To -->
                 <div class="md:col-span-2">
                     <label for="assigned_to" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Assign To</label>
@@ -49,6 +50,7 @@
                         @endforeach
                     </select>
                 </div>
+                @endif
 
                 <!-- Due Date -->
                 <div class="md:col-span-2">

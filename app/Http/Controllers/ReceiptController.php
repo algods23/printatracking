@@ -21,15 +21,22 @@ class ReceiptController extends Controller
 
     public function create(Request $request)
     {
-        $tasks = Task::where('status', '!=', 'Cancelled')
+        $tasksQuery = Task::where('status', '!=', 'Cancelled');
+
+        if (! Auth::user()->isAdmin()) {
+            $tasksQuery->where('assigned_to', Auth::id());
+        }
+
+        $tasks = $tasksQuery
             ->withSum('receipts as paid_amount', 'cash_received')
             ->latest()
             ->get();
+
         $selectedTask = $request->filled('task_id')
             ? $tasks->firstWhere('id', (int) $request->task_id)
             : null;
 
-        if (!$selectedTask) {
+        if (! $selectedTask) {
             return redirect()->route('tasks.index')->with('error', 'Open a task first before creating a receipt.');
         }
 
@@ -51,6 +58,10 @@ class ReceiptController extends Controller
                 ->withSum('receipts as paid_amount', 'cash_received')
                 ->lockForUpdate()
                 ->findOrFail($validated['task_id']);
+
+            if (! Auth::user()->isAdmin() && (int) $task->assigned_to !== (int) Auth::id()) {
+                abort(403, 'You can only access tasks assigned to your account.');
+            }
 
             $paidAmount = (float) ($task->paid_amount ?? 0);
             $taskAmount = (float) $task->amount;

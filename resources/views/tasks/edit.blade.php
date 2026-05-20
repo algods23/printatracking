@@ -54,6 +54,7 @@
                     @enderror
                 </div>
 
+                @if(auth()->user()->isAdmin())
                 <div class="md:col-span-2">
                     <label for="assigned_to" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Assign To</label>
                     <select id="assigned_to" name="assigned_to" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
@@ -63,38 +64,7 @@
                         @endforeach
                     </select>
                 </div>
-
-                <div class="md:col-span-2">
-                    <label for="product_type" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Product Type *</label>
-                    <select id="product_type" name="product_type" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('product_type') border-red-500 @enderror">
-                        @foreach(['Signage', 'Sticker', 'Banner', 'Label', 'Other'] as $type)
-                            <option value="{{ $type }}" {{ old('product_type', $task->product_type) == $type ? 'selected' : '' }}>{{ $type }}</option>
-                        @endforeach
-                    </select>
-                    @error('product_type')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div class="md:col-span-2">
-                    <label for="signage_type" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Signage Type</label>
-                    <select id="signage_type" name="signage_type" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                        <option value="">—</option>
-                        @foreach(['Digital', 'Vinyl', 'Neon', 'LED', 'Wooden', 'Metal', 'Other'] as $type)
-                            <option value="{{ $type }}" {{ old('signage_type', $task->signage_type) == $type ? 'selected' : '' }}>{{ $type }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="md:col-span-2">
-                    <label for="sticker_type" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Sticker Type</label>
-                    <select id="sticker_type" name="sticker_type" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                        <option value="">—</option>
-                        @foreach(['Vinyl', 'Paper', 'Label', 'Die-cut', 'Other'] as $type)
-                            <option value="{{ $type }}" {{ old('sticker_type', $task->sticker_type) == $type ? 'selected' : '' }}>{{ $type }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                @endif
 
                 <div class="md:col-span-2">
                     <label for="status" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Status *</label>

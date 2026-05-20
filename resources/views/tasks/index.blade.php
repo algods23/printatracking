@@ -51,7 +51,9 @@
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Task ID</th>
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Customer</th>
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Product</th>
+                    @if(auth()->user()->isAdmin())
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Assigned To</th>
+                    @endif
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Status</th>
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Priority</th>
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Amount</th>
@@ -72,9 +74,11 @@
                         <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                             <span class="inline-block px-2 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded text-xs font-medium">{{ $task->product_type }}</span>
                         </td>
+                        @if(auth()->user()->isAdmin())
                         <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                             {{ $task->assignedTo?->name ?? 'Unassigned' }}
                         </td>
+                        @endif
                         <td class="px-6 py-4 text-sm">
                             @switch($task->status)
                                 @case('Pending')
@@ -139,7 +143,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" class="px-6 py-12 text-center">
+                        <td colspan="{{ auth()->user()->isAdmin() ? 9 : 8 }}" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <i data-lucide="inbox" class="w-12 h-12 text-gray-400"></i>
                                 <p class="text-gray-500 dark:text-gray-400">No tasks found</p>

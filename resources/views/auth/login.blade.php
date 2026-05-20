@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Printa Signages</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/printa-world-logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/printa-world-logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
@@ -11,15 +13,13 @@
     <div class="min-h-screen flex items-center justify-center p-4">
         <div class="w-full max-w-md">
             <!-- Logo -->
-            <div class="flex items-center justify-center mb-8">
-                <div class="w-16 h-16 bg-yellow-500 rounded-xl flex items-center justify-center">
-                    <i data-lucide="package" class="w-10 h-10 text-black"></i>
-                </div>
-            </div>
-
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold mb-2">Printa Signages</h1>
-                <p class="text-gray-400">Management System</p>
+            <div class="flex flex-col items-center justify-center mb-8">
+                <img
+                    src="{{ asset('images/printa-world-logo.png') }}"
+                    alt="Printa World"
+                    class="w-40 h-40 object-contain"
+                />
+                <p class="text-gray-400 mt-4 text-sm">Management System</p>
             </div>
 
             <!-- Login Form -->

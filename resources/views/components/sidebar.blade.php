@@ -1,15 +1,13 @@
 <aside class="w-64 bg-black dark:bg-gray-900 border-r border-gray-800 flex flex-col">
     <!-- Logo -->
-    <div class="p-6 border-b border-gray-800">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center">
-                <i data-lucide="package" class="w-6 h-6 text-black"></i>
-            </div>
-            <div>
-                <h1 class="text-lg font-bold text-white">Printa</h1>
-                <p class="text-xs text-gray-400">Signages System</p>
-            </div>
-        </div>
+    <div class="p-5 border-b border-gray-800">
+        <a href="{{ route('dashboard') }}" class="block">
+            <img
+                src="{{ asset('images/printa-world-logo.png') }}"
+                alt="Printa World"
+                class="w-full max-h-16 object-contain mx-auto"
+            />
+        </a>
     </div>
 
     <!-- Navigation -->
