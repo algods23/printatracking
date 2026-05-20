@@ -18,12 +18,15 @@ class DashboardController extends Controller
         $ongoingTasks = Task::whereIn('status', ['Designing', 'Printing', 'Installing'])->count();
         $completedTasks = Task::where('status', 'Completed')->count();
 
-        // Calculate sales
+        // Calculate sales from actual payments only. Unpaid job orders have no receipts,
+        // so they should not increase revenue totals.
         $dailySales = Receipt::whereDate('created_at', Carbon::today())
-            ->sum('total');
+            ->whereHas('task', fn ($query) => $query->where('status', '!=', 'Cancelled'))
+            ->sum('cash_received');
         $monthlySales = Receipt::whereYear('created_at', Carbon::now()->year)
             ->whereMonth('created_at', Carbon::now()->month)
-            ->sum('total');
+            ->whereHas('task', fn ($query) => $query->where('status', '!=', 'Cancelled'))
+            ->sum('cash_received');
 
         // Calculate expenses
         $totalExpenses = Expense::whereDate('date', '>=', Carbon::now()->startOfMonth())
@@ -43,9 +46,10 @@ class DashboardController extends Controller
         // Revenue by month
         $monthlyRevenueData = Receipt::select(
             DB::raw("strftime('%Y-%m', created_at) as month"),
-            DB::raw('SUM(total) as total')
+            DB::raw('SUM(cash_received) as total')
         )
             ->whereYear('created_at', Carbon::now()->year)
+            ->whereHas('task', fn ($query) => $query->where('status', '!=', 'Cancelled'))
             ->groupBy('month')
             ->orderBy('month')
             ->get();

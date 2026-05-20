@@ -233,7 +233,7 @@
                 <h3 class="font-semibold text-gray-900 dark:text-white">Actions</h3>
             </div>
             <div class="p-6 space-y-3">
-                <a href="{{ route('tasks.job-order-print', $task) }}" target="_blank" rel="noopener" class="block w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-center flex items-center justify-center gap-2">
+                <a href="{{ route('tasks.job-order-print', $task) }}" class="block w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-center flex items-center justify-center gap-2">
                     <i data-lucide="printer" class="w-5 h-5"></i>
                     Print Job Order
                 </a>

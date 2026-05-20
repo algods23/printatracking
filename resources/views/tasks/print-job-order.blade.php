@@ -6,8 +6,8 @@
     <title>Job Order — {{ $task->task_id }}</title>
     <style>
         @page {
-            margin: 12mm;
-            size: A4 portrait;
+            margin: 0.12in;
+            size: 5.5in 3.5in;
         }
         * {
             box-sizing: border-box;
@@ -16,14 +16,15 @@
             margin: 0;
             padding: 0;
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 11px;
+            font-size: 8px;
             color: #111;
-            line-height: 1.35;
+            line-height: 1.2;
         }
         .sheet {
-            max-width: 190mm;
+            width: 4in;
+            max-width: 100%;
             margin: 0 auto;
-            padding: 8px;
+            padding: 0.04in;
         }
         .no-print {
             margin-bottom: 16px;
@@ -51,59 +52,89 @@
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 10px;
+            gap: 6px;
+            margin-bottom: 5px;
         }
         .logo-block {
             display: flex;
             align-items: center;
-            gap: 10px;
+        }
+        .fallback-logo {
+            position: relative;
+            width: 0.76in;
+            min-width: 0.76in;
+            height: 0.28in;
         }
         .logo-shapes {
+            position: absolute;
+            top: 0;
+            left: 0.12in;
             display: flex;
-            gap: 2px;
+            align-items: flex-start;
+            gap: 0.015in;
         }
-        .tri {
-            width: 0;
-            height: 0;
-            border-left: 10px solid transparent;
-            border-right: 10px solid transparent;
+        .logo-tile {
+            width: 0.09in;
+            height: 0.09in;
+            transform: rotate(45deg);
+            border-radius: 0.015in;
         }
-        .tri-cyan { border-bottom: 18px solid #06b6d4; }
-        .tri-magenta { border-bottom: 18px solid #db2777; }
-        .tri-yellow { border-bottom: 18px solid #eab308; }
-        .logo-text-stack {
-            font-size: 8px;
-            font-weight: bold;
-            line-height: 1.1;
-            letter-spacing: 0.03em;
+        .tile-cyan {
+            background: #06b6d4;
+            margin-top: 0.045in;
+        }
+        .tile-magenta {
+            background: #be3455;
+        }
+        .tile-yellow {
+            background: #eab308;
+            margin-top: 0.045in;
+        }
+        .logo-word {
+            position: absolute;
+            left: 0;
+            bottom: 0.055in;
+            font-size: 0.105in;
+            line-height: 1;
+            font-weight: 900;
+            font-style: italic;
+            letter-spacing: 0;
+        }
+        .logo-subtitle {
+            position: absolute;
+            left: 0.015in;
+            bottom: 0;
+            font-size: 0.04in;
+            line-height: 1;
+            font-weight: 900;
+            letter-spacing: 0;
         }
         .company-title {
-            text-align: right;
+            text-align: center;
             flex: 1;
         }
         .company-title h1 {
-            margin: 0 0 4px 0;
-            font-size: 22px;
+            margin: 0 0 2px 0;
+            font-size: 14px;
             letter-spacing: 0.04em;
             font-weight: 900;
         }
         .company-title p {
             margin: 0;
-            font-size: 11px;
+            font-size: 10px;
         }
         .customer-block {
-            margin: 14px 0 10px;
+            margin: 6px 0 4px;
         }
         .field-line {
             display: grid;
-            grid-template-columns: 90px 1fr;
+            grid-template-columns: 44px 1fr;
             align-items: end;
-            margin-bottom: 6px;
+            margin-bottom: 2px;
         }
         .field-line.two-cols {
-            grid-template-columns: 90px 1fr 80px 1fr;
-            gap: 4px;
+            grid-template-columns: 44px 1fr 28px 1fr;
+            gap: 2px;
         }
         .field-label {
             font-weight: bold;
@@ -112,22 +143,22 @@
         }
         .field-value {
             border-bottom: 1px solid #000;
-            min-height: 14px;
-            padding: 2px 4px;
+            min-height: 9px;
+            padding: 1px 2px;
         }
         table.items {
             width: 100%;
             border-collapse: collapse;
-            margin: 8px 0 10px;
+            margin: 10px 0 5px;
         }
         table.items th,
         table.items td {
-            border: 1px solid #000;
-            padding: 6px 5px;
+            border: 1px solid #000; 
+            padding: 2px 3px;
         }
         table.items th {
             font-weight: bold;
-            font-size: 10px;
+            font-size: 8px;
             text-align: center;
         }
         table.items td.desc {
@@ -141,33 +172,33 @@
         }
         .cols-bottom {
             display: grid;
-            grid-template-columns: 1fr 160px;
-            gap: 12px;
-            margin-top: 6px;
+            grid-template-columns: 1fr 1.12in;
+            gap: 8px;
+            margin-top: 3px;
         }
         .left-col .row {
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             display: flex;
             align-items: center;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 4px;
         }
         .left-col strong {
-            font-size: 10px;
+            font-size: 7px;
         }
         .mode-label {
             font-weight: bold;
-            margin-right: 8px;
+            margin-right: 4px;
         }
         .check-line {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            margin-right: 14px;
+            gap: 3px;
+            margin-right: 7px;
         }
         .pay-box {
             display: inline-block;
-            font-size: 15px;
+            font-size: 10px;
             line-height: 1;
             vertical-align: middle;
             width: 1.1em;
@@ -175,50 +206,62 @@
             font-family: "Segoe UI Symbol", "Arial Unicode MS", "DejaVu Sans", Arial, sans-serif;
         }
         .job-lines {
-            margin-top: 4px;
+            margin-top: 2px;
         }
         .job-lines .line {
             border-bottom: 1px solid #000;
-            min-height: 22px;
-            margin-top: 6px;
+            min-height: 13px;
+            margin-top: 3px;
         }
         .totals-block {
-            font-size: 11px;
+            font-size: 9px;
+            font-weight: 900;
+            line-height: 1.1;
+            padding-top: 1px;
         }
         .totals-block div {
             display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid #000;
-            padding: 5px 0;
-            gap: 8px;
+            align-items: baseline;
+            justify-content: flex-start;
+            border-bottom: 0;
+            padding: 0 0 3px;
+            gap: 5px;
         }
         .totals-block span.label {
             font-weight: bold;
+            min-width: 0.5in;
+            letter-spacing: 0;
+        }
+        .totals-block span.amount {
+            flex: 1;
+            text-align: right;
+            font-size: 7px;
+            font-weight: 700;
         }
         .footer-msg {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 10px;
             font-weight: bold;
             letter-spacing: 0.06em;
         }
         .footer-row {
             display: flex;
             justify-content: space-between;
-            margin-top: 24px;
-            font-size: 9px;
+            margin-top: 9px;
+            font-size: 7px;
         }
         .footer-row .footnote {
             max-width: 55%;
             line-height: 1.3;
         }
         .processed {
-            font-size: 10px;
+            font-size: 8px;
         }
         .processed .sig-line {
             border-bottom: 1px solid #000;
-            min-width: 140px;
-            height: 20px;
-            margin-top: 4px;
+            min-width: 0.72in;
+            height: 11px;
+            margin-top: 2px;
         }
         @media print {
             .no-print { display: none !important; }
@@ -237,14 +280,17 @@
     <div class="header-row">
         <div class="logo-block">
             @if(!empty($logoPath))
-                <img src="{{ asset('storage/'.$logoPath) }}" alt="" style="max-height:48px;max-width:120px;">
+                <img src="{{ asset('storage/'.$logoPath) }}" alt="" style="max-height:0.24in;max-width:0.7in;">
             @else
-                <div class="logo-shapes" aria-hidden="true">
-                    <div class="tri tri-cyan"></div>
-                    <div class="tri tri-magenta"></div>
-                    <div class="tri tri-yellow"></div>
+                <div class="fallback-logo" aria-label="Printa Signages and Stickers">
+                    <div class="logo-shapes" aria-hidden="true">
+                        <span class="logo-tile tile-cyan"></span>
+                        <span class="logo-tile tile-magenta"></span>
+                        <span class="logo-tile tile-yellow"></span>
+                    </div>
+                    <div class="logo-word">PRINTA</div>
+                    <div class="logo-subtitle">SIGNAGES &amp; STICKERS</div>
                 </div>
-                <div class="logo-text-stack">PRINTA<br>SIGNAGES &amp; STICKERS</div>
             @endif
         </div>
         <div class="company-title">
@@ -271,7 +317,7 @@
         </div>
     </div>
 
-    <p style="margin: 0 0 4px; font-size: 10px;"><strong>J.O./Task ID:</strong> {{ $task->task_id }}</p>
+    <p style="margin: 0 0 2px; font-size: 6px;"><strong>J.O./Task ID:</strong> {{ $task->task_id }}</p>
 
     <table class="items">
         <thead>
@@ -314,15 +360,15 @@
         <div class="totals-block">
             <div>
                 <span class="label">TOTAL :</span>
-                <span>₱{{ number_format($totalAmount, 2) }}</span>
+                <span class="amount">₱{{ number_format($totalAmount, 2) }}</span>
             </div>
             <div>
                 <span class="label">DEPOSIT :</span>
-                <span>₱{{ number_format($paidAmount, 2) }}</span>
+                <span class="amount">₱{{ number_format($paidAmount, 2) }}</span>
             </div>
             <div>
                 <span class="label">BALANCE :</span>
-                <span>₱{{ number_format($balance, 2) }}</span>
+                <span class="amount">₱{{ number_format($balance, 2) }}</span>
             </div>
         </div>
     </div>
