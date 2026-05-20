@@ -127,32 +127,51 @@ class TaskController extends Controller
 
     public function edit(Task $task)
     {
+        $task->load(['items', 'receipts']);
         $staff = User::where('role', 'Staff')->where('is_active', true)->get();
+
         return view('tasks.edit', compact('task', 'staff'));
     }
 
     public function update(Request $request, Task $task)
     {
         $validated = $request->validate([
-            'customer_name'    => 'required|string|max:255',
-            'contact_number'   => 'required|string|max:20',
-            'product_type'     => 'required|in:Signage,Sticker,Banner,Label,Other',
-            'signage_type'     => 'nullable|in:Digital,Vinyl,Neon,LED,Wooden,Metal,Other',
-            'sticker_type'     => 'nullable|in:Vinyl,Paper,Label,Die-cut,Other',
-            'assigned_to'      => 'nullable|exists:users,id',
-            'due_date'         => 'required|date',
-            'due_time'         => 'nullable|date_format:H:i',
-            'status'           => 'required|in:Pending,Designing,Printing,Installing,Completed,Cancelled',
-            'priority'         => 'required|in:Low,Medium,High,Urgent',
-            'notes'            => 'nullable|string',
-            'amount'           => 'required|numeric|min:0',
-            'payment_status'   => 'required|in:Unpaid,Partial,Paid',
-            'payment_amount'   => 'nullable|numeric|min:0',
-            'payment_method'   => 'nullable|string',
-            'reference_number' => 'nullable|string',
-            'attachments'      => 'nullable|array',
-            'attachments.*'    => 'file|max:51200',
+            'customer_name'     => 'required|string|max:255',
+            'contact_number'    => 'required|string|max:20',
+            'product_type'      => 'required|in:Signage,Sticker,Banner,Label,Other',
+            'signage_type'      => 'nullable|in:Digital,Vinyl,Neon,LED,Wooden,Metal,Other',
+            'sticker_type'      => 'nullable|in:Vinyl,Paper,Label,Die-cut,Other',
+            'assigned_to'       => 'nullable|exists:users,id',
+            'due_date'          => 'required|date',
+            'due_time'          => 'nullable|date_format:H:i',
+            'status'            => 'required|in:Pending,Designing,Printing,Installing,Completed,Cancelled',
+            'priority'          => 'required|in:Low,Medium,High,Urgent',
+            'notes'             => 'nullable|string',
+            'items'             => 'required|array|min:1',
+            'items.*.job_order' => 'required|string|max:255',
+            'items.*.quantity'  => 'required|integer|min:1',
+            'items.*.price'     => 'required|numeric|min:0',
+            'attachments'       => 'nullable|array',
+            'attachments.*'     => 'file|max:51200',
         ]);
+
+        $validated['signage_type'] = $validated['signage_type'] ?: null;
+        $validated['sticker_type'] = $validated['sticker_type'] ?: null;
+
+        $items = collect($validated['items'])->map(function ($item) {
+            $quantity = (int) $item['quantity'];
+            $price = (float) $item['price'];
+
+            return [
+                'job_order' => $item['job_order'],
+                'quantity'  => $quantity,
+                'price'     => $price,
+                'total'     => $quantity * $price,
+            ];
+        });
+
+        $validated['amount'] = $items->sum('total');
+        unset($validated['items']);
 
         if ($request->hasFile('attachments')) {
             $attachmentPaths = $task->attachments ?? [];
@@ -162,7 +181,17 @@ class TaskController extends Controller
             $validated['attachments'] = $attachmentPaths;
         }
 
-        $task->update($validated);
+        DB::transaction(function () use ($task, $validated, $items) {
+            $task->update($validated);
+
+            $task->items()->delete();
+            foreach ($items as $item) {
+                $task->items()->create($item);
+            }
+
+            $task->refresh();
+            $task->syncPaymentStatus();
+        });
 
         ActivityLog::create([
             'user_id'     => Auth::id(),

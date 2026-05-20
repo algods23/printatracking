@@ -1,0 +1,410 @@
+@extends('layouts.app')
+
+@section('title', 'Edit Task')
+@section('page-title', 'Edit Task')
+@section('page-subtitle', $task->task_id . ' — ' . $task->customer_name)
+
+@section('content')
+@php
+    $defaultItems = $task->items->isNotEmpty()
+        ? $task->items->map(fn ($i) => [
+            'job_order' => $i->job_order,
+            'quantity' => $i->quantity,
+            'price' => $i->price,
+        ])->values()->all()
+        : [['job_order' => '', 'quantity' => 1, 'price' => '']];
+    $orderItems = old('items', $defaultItems);
+    $paidFromReceipts = (float) $task->receipts->sum('cash_received');
+    $dueTimeDefault = '';
+    if ($task->due_time) {
+        $dueTimeDefault = strlen((string) $task->due_time) >= 5 ? substr((string) $task->due_time, 0, 5) : (string) $task->due_time;
+    }
+    $dueTimeValue = old('due_time', $dueTimeDefault);
+@endphp
+
+<div class="max-w-5xl mx-auto">
+    <a href="{{ route('tasks.show', $task) }}" class="inline-flex items-center gap-2 mb-4 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        Back to Task
+    </a>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Task Details</h2>
+        </div>
+
+        <form action="{{ route('tasks.update', $task) }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-6">
+            @csrf
+            @method('PUT')
+
+            <div class="grid grid-cols-1 md:grid-cols-6 gap-6">
+                <div class="md:col-span-2">
+                    <label for="customer_name" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Customer Name *</label>
+                    <input type="text" id="customer_name" name="customer_name" value="{{ old('customer_name', $task->customer_name) }}" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('customer_name') border-red-500 @enderror" />
+                    @error('customer_name')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="contact_number" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Contact Number *</label>
+                    <input type="text" id="contact_number" name="contact_number" value="{{ old('contact_number', $task->contact_number) }}" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('contact_number') border-red-500 @enderror" />
+                    @error('contact_number')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="assigned_to" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Assign To</label>
+                    <select id="assigned_to" name="assigned_to" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        <option value="">Select staff</option>
+                        @foreach($staff as $member)
+                            <option value="{{ $member->id }}" {{ (string) old('assigned_to', $task->assigned_to) === (string) $member->id ? 'selected' : '' }}>{{ $member->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="product_type" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Product Type *</label>
+                    <select id="product_type" name="product_type" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('product_type') border-red-500 @enderror">
+                        @foreach(['Signage', 'Sticker', 'Banner', 'Label', 'Other'] as $type)
+                            <option value="{{ $type }}" {{ old('product_type', $task->product_type) == $type ? 'selected' : '' }}>{{ $type }}</option>
+                        @endforeach
+                    </select>
+                    @error('product_type')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="signage_type" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Signage Type</label>
+                    <select id="signage_type" name="signage_type" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        <option value="">—</option>
+                        @foreach(['Digital', 'Vinyl', 'Neon', 'LED', 'Wooden', 'Metal', 'Other'] as $type)
+                            <option value="{{ $type }}" {{ old('signage_type', $task->signage_type) == $type ? 'selected' : '' }}>{{ $type }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="sticker_type" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Sticker Type</label>
+                    <select id="sticker_type" name="sticker_type" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        <option value="">—</option>
+                        @foreach(['Vinyl', 'Paper', 'Label', 'Die-cut', 'Other'] as $type)
+                            <option value="{{ $type }}" {{ old('sticker_type', $task->sticker_type) == $type ? 'selected' : '' }}>{{ $type }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="status" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Status *</label>
+                    <select id="status" name="status" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('status') border-red-500 @enderror">
+                        @foreach(['Pending', 'Designing', 'Printing', 'Installing', 'Completed', 'Cancelled'] as $status)
+                            <option value="{{ $status }}" {{ old('status', $task->status) == $status ? 'selected' : '' }}>{{ $status }}</option>
+                        @endforeach
+                    </select>
+                    @error('status')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="due_date" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Due Date *</label>
+                    <input type="date" id="due_date" name="due_date" value="{{ old('due_date', $task->due_date?->format('Y-m-d')) }}" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('due_date') border-red-500 @enderror" />
+                    @error('due_date')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="due_time" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Due Time</label>
+                    <input type="time" id="due_time" name="due_time" value="{{ $dueTimeValue }}" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('due_time') border-red-500 @enderror" />
+                    @error('due_time')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="priority" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Priority *</label>
+                    <select id="priority" name="priority" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('priority') border-red-500 @enderror">
+                        @foreach(['Low', 'Medium', 'High', 'Urgent'] as $p)
+                            <option value="{{ $p }}" {{ old('priority', $task->priority) == $p ? 'selected' : '' }}>{{ $p }}</option>
+                        @endforeach
+                    </select>
+                    @error('priority')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="md:col-span-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="block text-sm font-medium text-gray-900 dark:text-white">Job Orders *</label>
+                        <button type="button" onclick="addOrderRow()" class="px-3 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors text-sm flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            Add Order
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg">
+                        <table class="w-full min-w-[680px] text-sm">
+                            <thead class="bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300">
+                                <tr>
+                                    <th class="px-4 py-3 text-left font-semibold">Job Order</th>
+                                    <th class="px-4 py-3 text-left font-semibold w-24">Qty</th>
+                                    <th class="px-4 py-3 text-left font-semibold w-36">Price</th>
+                                    <th class="px-4 py-3 text-left font-semibold w-36">Total</th>
+                                    <th class="px-4 py-3 w-14"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="orderRows" class="divide-y divide-gray-300 dark:divide-gray-700">
+                                @foreach($orderItems as $index => $item)
+                                    <tr class="order-row bg-white dark:bg-gray-800">
+                                        <td class="p-2">
+                                            <input type="text" name="items[{{ $index }}][job_order]" value="{{ $item['job_order'] ?? '' }}" required placeholder="e.g. Signage, Sticker, Banner" class="job-order w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                                        </td>
+                                        <td class="p-2">
+                                            <input type="number" name="items[{{ $index }}][quantity]" value="{{ $item['quantity'] ?? 1 }}" required min="1" class="quantity w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                                        </td>
+                                        <td class="p-2">
+                                            <input type="number" name="items[{{ $index }}][price]" value="{{ $item['price'] ?? '' }}" required min="0" step="0.01" class="price w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                                        </td>
+                                        <td class="p-2">
+                                            <div class="row-total px-3 py-2 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg font-semibold text-gray-900 dark:text-white">&#8369;0.00</div>
+                                        </td>
+                                        <td class="p-2 text-center">
+                                            <button type="button" onclick="removeOrderRow(this)" class="remove-row p-2 text-red-500 hover:bg-red-500/10 rounded-lg" title="Remove order">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot class="bg-gray-100 dark:bg-gray-900">
+                                <tr>
+                                    <td colspan="3" class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white">Total</td>
+                                    <td class="px-4 py-3 font-bold text-green-600 dark:text-green-400" id="grandTotal">&#8369;0.00</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    @error('items')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                    @error('items.*.job_order')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                    @error('items.*.quantity')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                    @error('items.*.price')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            <div>
+                <label for="notes" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Notes</label>
+                <textarea id="notes" name="notes" rows="4" placeholder="Enter any additional notes..." class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('notes') border-red-500 @enderror">{{ old('notes', $task->notes) }}</textarea>
+                @error('notes')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Order total</p>
+                    <p id="summaryTotal" class="text-lg font-semibold text-gray-900 dark:text-white">&#8369;0.00</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Paid (receipts)</p>
+                    <p id="summaryPaid" class="text-lg font-semibold text-green-600 dark:text-green-400">&#8369;0.00</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Balance</p>
+                    <p id="summaryBalance" class="text-lg font-semibold text-yellow-600 dark:text-yellow-400">&#8369;0.00</p>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 -mt-4">Saving updates the task amount from job orders. Payment status is recalculated from existing receipts.</p>
+
+            @if(!empty($task->attachments))
+                <div>
+                    <p class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Current attachments</p>
+                    <ul class="text-sm space-y-1 text-yellow-600 dark:text-yellow-400">
+                        @foreach($task->attachments as $path)
+                            <li><a href="{{ asset('storage/' . $path) }}" target="_blank" rel="noopener" class="hover:underline">{{ $path }}</a></li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <div>
+                <label for="attachments" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Add attachments</label>
+                <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center cursor-pointer hover:border-yellow-500 transition-colors" onclick="document.getElementById('attachments').click()">
+                    <i data-lucide="upload-cloud" class="w-12 h-12 text-gray-400 mx-auto mb-3"></i>
+                    <p class="text-gray-600 dark:text-gray-400 mb-1">Click to upload or drag and drop</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-500">Up to 50MB each</p>
+                    <input type="file" id="attachments" name="attachments[]" multiple class="hidden" onchange="previewFiles(event)">
+                </div>
+                <div id="filePreview" class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+                @error('attachments')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+                @error('attachments.*')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="flex gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button type="submit" class="flex-1 px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <i data-lucide="check" class="w-5 h-5"></i>
+                    Save Changes
+                </button>
+                <a href="{{ route('tasks.show', $task) }}" class="flex-1 px-6 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@endsection
+
+@section('scripts')
+<script>
+    const paidFromReceipts = {{ json_encode($paidFromReceipts) }};
+
+    let selectedFiles = new DataTransfer();
+
+    function previewFiles(event) {
+        const input = document.getElementById('attachments');
+        for (let i = 0; i < event.target.files.length; i++) {
+            selectedFiles.items.add(event.target.files[i]);
+        }
+        input.files = selectedFiles.files;
+        renderPreview();
+    }
+
+    function removeFile(index) {
+        const input = document.getElementById('attachments');
+        const dt = new DataTransfer();
+        for (let i = 0; i < input.files.length; i++) {
+            if (i !== index) dt.items.add(input.files[i]);
+        }
+        selectedFiles = dt;
+        input.files = selectedFiles.files;
+        renderPreview();
+    }
+
+    function renderPreview() {
+        const input = document.getElementById('attachments');
+        const preview = document.getElementById('filePreview');
+        preview.innerHTML = '';
+        Array.from(input.files).forEach((file, index) => {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.innerHTML += `
+                        <div class="relative group border border-gray-200 dark:border-gray-700 rounded-lg p-2 flex items-center justify-center bg-gray-50 dark:bg-gray-800">
+                            <img src="${e.target.result}" alt="${file.name}" class="max-h-32 object-contain rounded">
+                            <div class="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs truncate p-1 rounded-b">${file.name}</div>
+                            <button type="button" onclick="removeFile(${index})" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-red-600 focus:outline-none">
+                                <i data-lucide="x" class="w-3 h-3"></i>
+                            </button>
+                        </div>`;
+                    lucide.createIcons();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.innerHTML += `
+                    <div class="relative group border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800 h-36">
+                        <i data-lucide="file" class="w-8 h-8 text-gray-400 mb-2"></i>
+                        <span class="text-xs text-center text-gray-600 dark:text-gray-300 w-full truncate" title="${file.name}">${file.name}</span>
+                        <button type="button" onclick="removeFile(${index})" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-red-600 focus:outline-none">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                        </button>
+                    </div>`;
+                lucide.createIcons();
+            }
+        });
+    }
+
+    function formatMoney(value) {
+        return `\u20b1${Number(value || 0).toFixed(2)}`;
+    }
+
+    function recalculateOrders() {
+        let grandTotal = 0;
+        document.querySelectorAll('.order-row').forEach((row) => {
+            const quantity = Number(row.querySelector('.quantity').value || 0);
+            const price = Number(row.querySelector('.price').value || 0);
+            const total = quantity * price;
+            grandTotal += total;
+            row.querySelector('.row-total').textContent = formatMoney(total);
+        });
+        document.getElementById('grandTotal').textContent = formatMoney(grandTotal);
+        updatePaymentSummary(grandTotal);
+        updateRemoveButtons();
+    }
+
+    function updatePaymentSummary(grandTotal) {
+        const total = grandTotal ?? 0;
+        const paid = Number(paidFromReceipts) || 0;
+        const balance = Math.max(total - paid, 0);
+
+        document.getElementById('summaryTotal').textContent = formatMoney(total);
+        document.getElementById('summaryPaid').textContent = formatMoney(paid);
+        document.getElementById('summaryBalance').textContent = formatMoney(balance);
+    }
+
+    function updateOrderIndexes() {
+        document.querySelectorAll('.order-row').forEach((row, index) => {
+            row.querySelector('.job-order').name = `items[${index}][job_order]`;
+            row.querySelector('.quantity').name = `items[${index}][quantity]`;
+            row.querySelector('.price').name = `items[${index}][price]`;
+        });
+    }
+
+    function updateRemoveButtons() {
+        const rows = document.querySelectorAll('.order-row');
+        rows.forEach((row) => {
+            const button = row.querySelector('.remove-row');
+            button.disabled = rows.length === 1;
+            button.classList.toggle('opacity-40', rows.length === 1);
+            button.classList.toggle('cursor-not-allowed', rows.length === 1);
+        });
+    }
+
+    function attachOrderListeners(row) {
+        row.querySelectorAll('.quantity, .price').forEach((input) => {
+            input.addEventListener('input', recalculateOrders);
+        });
+    }
+
+    function addOrderRow() {
+        const tbody = document.getElementById('orderRows');
+        const newRow = tbody.querySelector('.order-row').cloneNode(true);
+        newRow.querySelector('.job-order').value = '';
+        newRow.querySelector('.quantity').value = 1;
+        newRow.querySelector('.price').value = '';
+        newRow.querySelector('.row-total').textContent = formatMoney(0);
+        tbody.appendChild(newRow);
+        updateOrderIndexes();
+        attachOrderListeners(newRow);
+        recalculateOrders();
+        lucide.createIcons();
+    }
+
+    function removeOrderRow(button) {
+        if (document.querySelectorAll('.order-row').length === 1) return;
+        button.closest('.order-row').remove();
+        updateOrderIndexes();
+        recalculateOrders();
+    }
+
+    document.querySelectorAll('.order-row').forEach(attachOrderListeners);
+    recalculateOrders();
+    lucide.createIcons();
+</script>
+@endsection
