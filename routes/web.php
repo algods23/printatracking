@@ -23,6 +23,7 @@ Route::middleware('auth')->group(function () {
 
     // Tasks
     Route::resource('tasks', TaskController::class);
+    Route::get('/tasks/{task}/job-order-print', [TaskController::class, 'printJobOrder'])->name('tasks.job-order-print');
     Route::get('/tasks/search', [TaskController::class, 'search'])->name('tasks.search');
     Route::get('/tasks/filter', [TaskController::class, 'filter'])->name('tasks.filter');
 

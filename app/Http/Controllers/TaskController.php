@@ -6,6 +6,7 @@ use App\Models\Task;
 use App\Models\Receipt;
 use App\Models\User;
 use App\Models\ActivityLog;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -123,6 +124,54 @@ class TaskController extends Controller
         $task->load(['assignedTo', 'items', 'receipts.issuedBy']);
 
         return view('tasks.show', compact('task'));
+    }
+
+    public function printJobOrder(Task $task)
+    {
+        $task->load(['items', 'receipts']);
+
+        $totalAmount = (float) $task->amount;
+        $paidAmount = (float) $task->receipts->sum('cash_received');
+        $balance = max($totalAmount - $paidAmount, 0);
+
+        $printedBy = Auth::user()?->name ?? 'Staff';
+
+        $methods = $task->receipts->pluck('payment_method')->filter()->unique();
+
+        $cashMethods = ['Cash', 'Card', 'Check'];
+        $gcashMethods = ['Bank Transfer', 'Other'];
+
+        $checkboxCash = $methods->contains(fn ($m) => in_array($m, $cashMethods, true));
+        $checkboxGcash = $methods->contains(fn ($m) => in_array($m, $gcashMethods, true));
+
+        if ($paidAmount > 0 && ! $checkboxCash && ! $checkboxGcash && $methods->isNotEmpty()) {
+            $checkboxCash = true;
+        }
+
+        $maxRows = 8;
+        $items = $task->items()->orderBy('id')->get();
+        $placeholders = collect(range(1, max(0, $maxRows - $items->count())))->map(fn () => null);
+        $tableRows = $items->concat($placeholders)->take($maxRows);
+
+        $companyName = Setting::get('company_name', 'PRINTA SIGNAGES');
+        $companyAddress = Setting::get('company_address', 'KUMINTANG ST., MINTAL, DAVAO CITY');
+        $companyPhone = Setting::get('company_phone', '09667550044');
+        $logoPath = Setting::get('company_logo');
+
+        return view('tasks.print-job-order', compact(
+            'task',
+            'totalAmount',
+            'paidAmount',
+            'balance',
+            'printedBy',
+            'checkboxCash',
+            'checkboxGcash',
+            'tableRows',
+            'companyName',
+            'companyAddress',
+            'companyPhone',
+            'logoPath'
+        ));
     }
 
     public function edit(Task $task)
