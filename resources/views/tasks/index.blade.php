@@ -6,14 +6,14 @@
 
 @section('content')
 <!-- Search & Filter Bar -->
-<div class="mb-6 flex items-end gap-3 flex-wrap">
+<form id="taskFiltersForm" action="{{ route('tasks.index') }}" method="GET" class="mb-6 flex items-end gap-3 flex-wrap">
     <div class="flex-1 min-w-[200px]">
-        <form action="{{ route('tasks.search') }}" method="GET" class="flex gap-2">
-            <input type="text" name="q" value="{{ $query ?? '' }}" placeholder="Search by task ID, customer name, or phone..." class="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+        <div class="flex gap-2">
+            <input type="text" name="q" value="{{ $query ?? request('q') }}" placeholder="Search by task ID, customer name, or phone..." class="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
             <button type="submit" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors text-sm">Search</button>
-        </form>
+        </div>
     </div>
-    <select onchange="filterTasks()" id="statusFilter" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+    <select onchange="filterTasks()" id="statusFilter" name="status" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
         <option value="">All Status</option>
         <option value="Pending">Pending</option>
         <option value="Designing">Designing</option>
@@ -23,7 +23,7 @@
         <option value="Received">Received</option>
         <option value="Cancelled">Cancelled</option>
     </select>
-    <select onchange="filterTasks()" id="priorityFilter" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+    <select onchange="filterTasks()" id="priorityFilter" name="priority" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
         <option value="">All Priority</option>
         <option value="Low">Low</option>
         <option value="Medium">Medium</option>
@@ -32,20 +32,20 @@
     </select>
     <div>
         <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Due From</label>
-        <input type="date" id="dueDateFrom" onchange="filterTasks()" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+        <input type="date" id="dueDateFrom" name="due_date_from" onchange="filterTasks()" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
     </div>
     <div>
         <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Due To</label>
-        <input type="date" id="dueDateTo" onchange="filterTasks()" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+        <input type="date" id="dueDateTo" name="due_date_to" onchange="filterTasks()" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
     </div>
-    <button onclick="clearFilters()" class="px-3 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors text-sm">
+    <button type="button" onclick="clearFilters()" class="px-3 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors text-sm">
         Clear
     </button>
     <a href="{{ route('tasks.create') }}" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors flex items-center gap-2 text-sm">
         <i data-lucide="plus" class="w-4 h-4"></i>
         New Task
     </a>
-</div>
+</form>
 
 <!-- Tasks Table -->
 <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
@@ -55,7 +55,6 @@
                 <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Task ID</th>
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Customer</th>
-                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Product</th>
                     @if(auth()->user()->isAdmin())
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Assigned To</th>
                     @endif
@@ -76,9 +75,7 @@
                             <div>{{ $task->customer_name }}</div>
                             <div class="text-xs text-gray-500">{{ $task->contact_number }}</div>
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                            <span class="inline-block px-2 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded text-xs font-medium">{{ $task->product_type }}</span>
-                        </td>
+                        
                         @if(auth()->user()->isAdmin())
                         <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                             {{ $task->assignedTo?->name ?? 'Unassigned' }}
@@ -177,18 +174,7 @@
 @section('scripts')
 <script>
     function filterTasks() {
-        const status = document.getElementById('statusFilter').value;
-        const priority = document.getElementById('priorityFilter').value;
-        const dueDateFrom = document.getElementById('dueDateFrom').value;
-        const dueDateTo = document.getElementById('dueDateTo').value;
-        
-        let url = '{{ route('tasks.filter') }}?';
-        if (status) url += 'status=' + status + '&';
-        if (priority) url += 'priority=' + priority + '&';
-        if (dueDateFrom) url += 'due_date_from=' + dueDateFrom + '&';
-        if (dueDateTo) url += 'due_date_to=' + dueDateTo + '&';
-        
-        window.location.href = url;
+        document.getElementById('taskFiltersForm').submit();
     }
 
     function clearFilters() {

@@ -14,14 +14,18 @@ use Illuminate\Support\Facades\Storage;
 
 class TaskController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $tasks = $this->visibleTasksQuery()
-            ->with('assignedTo')
+        $query = $this->filteredTasksQuery($request);
+        $tasks = $query->with('assignedTo')
             ->orderBy('due_date', 'asc')
-            ->paginate(15);
+            ->paginate(10)
+            ->withQueryString();
 
-        return view('tasks.index', compact('tasks'));
+        return view('tasks.index', [
+            'tasks' => $tasks,
+            'query' => $request->input('q'),
+        ]);
     }
 
     public function create()
@@ -350,23 +354,27 @@ class TaskController extends Controller
 
     public function search(Request $request)
     {
-        $query = $request->input('q');
-        $tasks = $this->visibleTasksQuery()
-            ->where(function ($q) use ($query) {
-                $q->where('task_id', 'like', "%{$query}%")
-                    ->orWhere('customer_name', 'like', "%{$query}%")
-                    ->orWhere('contact_number', 'like', "%{$query}%");
-            })
-            ->with('assignedTo')
-            ->orderBy('due_date', 'asc')
-            ->paginate(15);
-
-        return view('tasks.index', compact('tasks', 'query'));
+        return $this->index($request);
     }
 
     public function filter(Request $request)
     {
+        return $this->index($request);
+    }
+
+    private function filteredTasksQuery(Request $request)
+    {
         $query = $this->visibleTasksQuery();
+
+        if ($request->filled('q')) {
+            $search = $request->input('q');
+
+            $query->where(function ($q) use ($search) {
+                $q->where('task_id', 'like', "%{$search}%")
+                    ->orWhere('customer_name', 'like', "%{$search}%")
+                    ->orWhere('contact_number', 'like', "%{$search}%");
+            });
+        }
 
         if ($request->status) {
             $query->where('status', $request->status);
@@ -388,9 +396,7 @@ class TaskController extends Controller
             $query->where('assigned_to', $request->assigned_to);
         }
 
-        $tasks = $query->with('assignedTo')->orderBy('due_date', 'asc')->paginate(15);
-
-        return view('tasks.index', compact('tasks'));
+        return $query;
     }
 
     private function visibleTasksQuery()

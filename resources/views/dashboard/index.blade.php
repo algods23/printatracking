@@ -21,25 +21,25 @@
     <!-- Pending Tasks Card -->
     <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-gray-600 dark:text-gray-400 font-semibold">Pending</h3>
+            <h3 class="text-white-600 dark:text-white-400 font-semibold">Pending</h3>
             <div class="w-10 h-10 bg-orange-500/10 rounded-lg flex items-center justify-center">
                 <i data-lucide="alert-circle" class="w-6 h-6 text-orange-500"></i>
             </div>
         </div>
-        <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ $pendingTasks }}</p>
+        <p class="text-3xl font-bold text-white-900 dark:text-white">{{ $pendingTasks }}</p>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Awaiting processing</p>
     </div>
 
-    <!-- Ongoing Tasks Card -->
+    <!-- Received Tasks Card -->
     <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-gray-600 dark:text-gray-400 font-semibold">Ongoing</h3>
-            <div class="w-10 h-10 bg-yellow-500/10 rounded-lg flex items-center justify-center">
-                <i data-lucide="hourglass" class="w-6 h-6 text-yellow-500"></i>
+            <h3 class="text-gray-600 dark:text-gray-400 font-semibold">Received</h3>
+            <div class="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                <i data-lucide="package-check" class="w-6 h-6 text-blue-500"></i>
             </div>
         </div>
-        <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ $ongoingTasks }}</p>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">In progress</p>
+        <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ $receivedTasks }}</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Orders received by customers</p>
     </div>
 
     <!-- Completed Tasks Card -->
@@ -124,7 +124,7 @@
     const isDark = document.documentElement.classList.contains('dark');
     const gridColor   = isDark ? '#374151' : '#e5e7eb';
     const tickColor   = isDark ? '#d1d5db' : '#6b7280';
-    const legendColor = isDark ? '#d1d5db' : '#374151';
+    const legendColor = '#ffffff';
     const borderColor = isDark ? '#1f2937' : '#ffffff';
 
     // Task Status Chart
@@ -133,6 +133,12 @@
 
     const statuses = taskStatusData.map(item => item.status);
     const counts   = taskStatusData.map(item => item.count);
+    const statusColors = {
+        Pending: '#f97316',
+        Received: '#2563eb',
+        Completed: '#22c55e',
+       
+    };
 
     new Chart(taskStatusCtx, {
         type: 'doughnut',
@@ -140,10 +146,7 @@
             labels: statuses,
             datasets: [{
                 data: counts,
-                backgroundColor: [
-                    '#f59e0b', '#3b82f6', '#8b5cf6',
-                    '#ec4899', '#10b981', '#ef4444',
-                ],
+                backgroundColor: statuses.map(status => statusColors[status] || '#6b7280'),
                 borderColor: borderColor,
                 borderWidth: 2,
             }]

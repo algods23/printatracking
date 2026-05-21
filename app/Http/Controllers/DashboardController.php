@@ -15,8 +15,8 @@ class DashboardController extends Controller
     {
         $totalTasks = Task::count();
         $pendingTasks = Task::where('status', 'Pending')->count();
-        $ongoingTasks = Task::whereIn('status', ['Designing', 'Printing', 'Installing'])->count();
-        $completedTasks = Task::whereIn('status', ['Completed', 'Received'])->count();
+        $receivedTasks = Task::where('status', 'Received')->count();
+        $completedTasks = Task::where('status', 'Completed')->count();
 
         // Calculate sales from actual payments only. Unpaid job orders have no receipts,
         // so they should not increase revenue totals.
@@ -39,9 +39,21 @@ class DashboardController extends Controller
             ->get();
 
         // Task status breakdown for chart
-        $taskStatusData = Task::select('status', DB::raw('count(*) as count'))
-            ->groupBy('status')
-            ->get();
+        $taskStatusData = collect([
+            [
+                'status' => 'Pending',
+                'count' => Task::where('status', 'Pending')->count(),
+            ],
+            [
+                'status' => 'Received',
+                'count' => Task::where('status', 'Received')->count(),
+            ],
+            [
+                'status' => 'Completed',
+                'count' => Task::where('status', 'Completed')->count(),
+            ],
+
+        ]);
 
         // Revenue by month
         $monthlyRevenueData = Receipt::select(
@@ -57,7 +69,7 @@ class DashboardController extends Controller
         return view('dashboard.index', [
             'totalTasks' => $totalTasks,
             'pendingTasks' => $pendingTasks,
-            'ongoingTasks' => $ongoingTasks,
+            'receivedTasks' => $receivedTasks,
             'completedTasks' => $completedTasks,
             'dailySales' => $dailySales,
             'monthlySales' => $monthlySales,

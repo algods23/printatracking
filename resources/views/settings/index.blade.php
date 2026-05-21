@@ -80,73 +80,9 @@
         </form>
     </div>
 
-    <!-- Printer Settings -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Printer Settings</h2>
-        </div>
 
-        <form action="{{ route('settings.printer') }}" method="POST" class="p-6 space-y-6">
-            @csrf
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label for="printer_name" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Printer Name</label>
-                    <input type="text" id="printer_name" name="printer_name" value="{{ $printerName }}" placeholder="Default Printer" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                </div>
 
-                <div>
-                    <label for="paper_width" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Paper Width</label>
-                    <select id="paper_width" name="paper_width" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                        <option value="80">80mm (Standard)</option>
-                        <option value="58">58mm (Compact)</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="bg-blue-500/10 border border-blue-500 rounded-lg p-4">
-                <p class="text-sm text-blue-700 dark:text-blue-400">
-                    <strong>Note:</strong> Configure your thermal printer through Windows Devices & Printers before using this application.
-                </p>
-            </div>
-
-            <div class="flex gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button type="submit" class="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors flex items-center gap-2">
-                    <i data-lucide="save" class="w-5 h-5"></i>
-                    Save Changes
-                </button>
-                <button type="button" class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors flex items-center gap-2">
-                    <i data-lucide="printer" class="w-5 h-5"></i>
-                    Test Print
-                </button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Theme Settings -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Theme Settings</h2>
-        </div>
-
-        <form action="{{ route('settings.theme') }}" method="POST" class="p-6 space-y-6">
-            @csrf
-
-            <div class="flex items-center gap-4">
-                <label class="flex items-center gap-3 cursor-pointer">
-                    <input type="checkbox" name="dark_mode" value="1" {{ $darkMode === 'true' ? 'checked' : '' }} class="w-4 h-4 accent-yellow-500">
-                    <span class="text-gray-900 dark:text-white">Enable Dark Mode</span>
-                </label>
-            </div>
-
-            <div class="flex gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button type="submit" class="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors flex items-center gap-2">
-                    <i data-lucide="save" class="w-5 h-5"></i>
-                    Save Changes
-                </button>
-            </div>
-        </form>
-    </div>
 
     <!-- Backup & Restore -->
     @if(auth()->user()->isAdmin())
@@ -182,66 +118,8 @@
             </div>
         </div>
     </div>
-
-    <!-- User Management -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">User Management</h2>
-            <a href="{{ route('settings.create-user') }}" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold text-sm rounded-lg transition-colors flex items-center gap-2">
-                <i data-lucide="plus" class="w-4 h-4"></i>
-                New User
-            </a>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead>
-                    <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Name</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Email</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Role</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Status</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    @foreach($users ?? [] as $user)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">{{ $user->name }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $user->email }}</td>
-                            <td class="px-6 py-4 text-sm">
-                                <span class="inline-block px-3 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-xs font-medium">{{ $user->role }}</span>
-                            </td>
-                            <td class="px-6 py-4 text-sm">
-                                <span class="inline-block px-3 py-1 {{ $user->is_active ? 'bg-green-500/10 text-green-600 dark:text-green-400' : 'bg-red-500/10 text-red-600 dark:text-red-400' }} rounded-full text-xs font-medium">
-                                    {{ $user->is_active ? 'Active' : 'Inactive' }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-sm">
-                                <div class="flex items-center gap-2">
-                                    <a href="{{ route('settings.edit-user', $user) }}" class="p-2 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/10 rounded transition-colors">
-                                        <i data-lucide="edit" class="w-4 h-4"></i>
-                                    </a>
-                                    @if($user->id !== auth()->id())
-                                        <form action="{{ route('settings.delete-user', $user) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="p-2 text-red-600 dark:text-red-400 hover:bg-red-500/10 rounded transition-colors">
-                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                            </button>
-                                        </form>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
     @endif
 </div>
-
 @endsection
 
 @section('scripts')

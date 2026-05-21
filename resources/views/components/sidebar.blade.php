@@ -60,7 +60,13 @@
     </nav>
 
     <!-- User Info -->
-    <div class="p-4 border-t border-gray-800">
+    <div class="p-4 border-t border-gray-800 space-y-3">
+        @if(auth()->user()->isAdmin())
+        <a href="{{ route('settings.users') }}" class="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-semibold rounded-lg transition-colors {{ request()->routeIs('settings.users', 'settings.create-user', 'settings.edit-user') ? 'bg-yellow-500 text-black' : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white' }}">
+            <i data-lucide="users" class="w-4 h-4"></i>
+            Manage Users
+        </a>
+        @endif
         <div class="flex items-center justify-between px-4 py-3 bg-gray-800 rounded-lg">
             <div class="flex items-center gap-3 flex-1">
                 <div class="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center text-black font-bold">
@@ -75,7 +81,7 @@
                 <button @click="open = !open" class="text-gray-400 hover:text-gray-300">
                     <i data-lucide="more-vertical" class="w-4 h-4"></i>
                 </button>
-                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-gray-700 rounded-lg shadow-lg z-50">
+                <div x-show="open" @click.away="open = false" class="absolute right-0 bottom-full mb-2 w-48 bg-gray-700 rounded-lg shadow-lg z-50 border border-gray-600">
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-600 rounded-lg transition-colors flex items-center gap-2">
