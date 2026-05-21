@@ -13,19 +13,7 @@
 
         <div class="flex items-center gap-4">
 
-            <!-- Theme Toggle -->
-            <button
-                @click="darkMode = !darkMode; localStorage.setItem('darkMode', darkMode)"
-                class="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-            >
-                <svg x-show="darkMode" class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="5"></circle>
-                </svg>
 
-                <svg x-show="!darkMode" class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3"></path>
-                </svg>
-            </button>
 
             <!-- Notifications -->
             <div class="relative" x-data="{ open: false }">
