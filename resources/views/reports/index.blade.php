@@ -5,7 +5,7 @@
 @section('page-subtitle', 'Select a date range and report types to generate')
 
 @section('content')
-<div class="max-w-3xl mx-auto space-y-6">
+<div class="max-w-5xl mx-auto space-y-6">
     <form method="GET" action="{{ route('reports.index') }}" id="reportForm" class="space-y-6">
         <input type="hidden" name="generate" value="1">
 
@@ -32,6 +32,7 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-2">
+                    <button type="button" data-preset="today" class="date-preset px-4 py-1.5 text-sm rounded-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Today</button>
                     <button type="button" data-preset="week" class="date-preset px-4 py-1.5 text-sm rounded-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">This week</button>
                     <button type="button" data-preset="month" class="date-preset px-4 py-1.5 text-sm rounded-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">This month</button>
                     <button type="button" data-preset="last_month" class="date-preset px-4 py-1.5 text-sm rounded-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Last month</button>
@@ -48,20 +49,36 @@
                     Select all
                 </button>
             </div>
-            <div class="p-5">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    @foreach($reportTypes as $value => $label)
+            <div class="p-5 space-y-3">
+                {{-- Row 1: Sales, Expense, Task --}}
+                <div class="grid grid-cols-3 gap-3">
+                    @foreach(['sales', 'expenses', 'tasks'] as $value)
                         @php
+                            $label = $reportTypes[$value];
                             $meta = $reportTypeMeta[$value];
                             $checked = in_array($value, $selectedTypes, true);
-                            $wide = $meta['wide'] ?? false;
                         @endphp
-                        <label class="report-type-card flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 cursor-pointer transition-colors
-                            {{ $wide ? 'sm:col-span-2' : '' }}
+                        <label class="report-type-card flex items-center gap-2 px-3 py-3 rounded-xl border-2 cursor-pointer transition-colors min-w-0
                             {{ $checked ? 'border-yellow-500 bg-yellow-500/5' : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500' }}">
-                            <input type="checkbox" name="types[]" value="{{ $value }}" class="report-type-checkbox w-4 h-4 rounded border-gray-400 text-yellow-500 focus:ring-yellow-500" {{ $checked ? 'checked' : '' }}>
-                            <i data-lucide="{{ $meta['icon'] }}" class="w-5 h-5 text-gray-600 dark:text-gray-400 shrink-0"></i>
-                            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $label }}</span>
+                            <input type="checkbox" name="types[]" value="{{ $value }}" class="report-type-checkbox w-4 h-4 shrink-0 rounded border-gray-400 text-yellow-500 focus:ring-yellow-500" {{ $checked ? 'checked' : '' }}>
+                            <i data-lucide="{{ $meta['icon'] }}" class="w-4 h-4 text-gray-600 dark:text-gray-400 shrink-0"></i>
+                            <span class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $label }}</span>
+                        </label>
+                    @endforeach
+                </div>
+                {{-- Row 2: Productivity, Monthly summary --}}
+                <div class="grid grid-cols-2 gap-3">
+                    @foreach(['productivity', 'monthly'] as $value)
+                        @php
+                            $label = $reportTypes[$value];
+                            $meta = $reportTypeMeta[$value];
+                            $checked = in_array($value, $selectedTypes, true);
+                        @endphp
+                        <label class="report-type-card flex items-center gap-2 px-3 py-3 rounded-xl border-2 cursor-pointer transition-colors min-w-0
+                            {{ $checked ? 'border-yellow-500 bg-yellow-500/5' : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500' }}">
+                            <input type="checkbox" name="types[]" value="{{ $value }}" class="report-type-checkbox w-4 h-4 shrink-0 rounded border-gray-400 text-yellow-500 focus:ring-yellow-500" {{ $checked ? 'checked' : '' }}>
+                            <i data-lucide="{{ $meta['icon'] }}" class="w-4 h-4 text-gray-600 dark:text-gray-400 shrink-0"></i>
+                            <span class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $label }}</span>
                         </label>
                     @endforeach
                 </div>
@@ -71,28 +88,25 @@
             </div>
         </div>
 
-        <button type="submit" class="w-full px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-xl transition-colors flex items-center justify-center gap-2">
-            <i data-lucide="file-bar-chart" class="w-5 h-5"></i>
-            Generate reports
-        </button>
+        <div class="flex justify-center">
+            <button type="submit" class="px-5 py-2 text-sm bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors flex items-center gap-2">
+                <i data-lucide="file-bar-chart" class="w-4 h-4"></i>
+                Generate reports
+            </button>
+        </div>
+
+        <div class="flex justify-end">
+    <a href="{{ route('reports.export-excel', ['types' => array_keys($reports), 'start_date' => $startDate, 'end_date' => $endDate]) }}"
+        class="px-5 py-2.5 bg-green-700 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0">
+        <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
+        Export all Reports to Excel
+    </a>
+</div> </div>
     </form>
 
     @if(!empty($reports))
-        <div class="space-y-6 pt-2">
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                <div class="text-center sm:text-left">
-                    <p class="text-sm font-medium text-gray-900 dark:text-white">
-                        {{ count($reports) }} {{ Str::plural('report', count($reports)) }} generated
-                    </p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
-                        {{ \Carbon\Carbon::parse($startDate)->format('M d, Y') }} — {{ \Carbon\Carbon::parse($endDate)->format('M d, Y') }}
-                    </p>
-                </div>
-                <a href="{{ route('reports.export-excel', ['types' => array_keys($reports), 'start_date' => $startDate, 'end_date' => $endDate]) }}"
-                    class="w-full sm:w-auto px-5 py-2.5 bg-green-700 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0">
-                    <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
-                    Export all to Excel
-                </a>
+      
+              
             </div>
             @foreach($reports as $type => $report)
                 <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
@@ -126,15 +140,18 @@
         const today = new Date();
         const start = document.getElementById('start_date');
         const end = document.getElementById('end_date');
-        end.value = formatDate(today);
-
-        if (preset === 'week') {
+        if (preset === 'today') {
+            start.value = formatDate(today);
+            end.value = formatDate(today);
+        } else if (preset === 'week') {
+            end.value = formatDate(today);
             const d = new Date(today);
             const day = d.getDay();
             const diff = day === 0 ? 6 : day - 1;
             d.setDate(d.getDate() - diff);
             start.value = formatDate(d);
         } else if (preset === 'month') {
+            end.value = formatDate(today);
             start.value = formatDate(new Date(today.getFullYear(), today.getMonth(), 1));
         } else if (preset === 'last_month') {
             const first = new Date(today.getFullYear(), today.getMonth() - 1, 1);
@@ -142,6 +159,7 @@
             start.value = formatDate(first);
             end.value = formatDate(last);
         } else if (preset === 'year') {
+            end.value = formatDate(today);
             start.value = formatDate(new Date(today.getFullYear(), 0, 1));
         }
     }

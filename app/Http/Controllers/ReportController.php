@@ -25,7 +25,7 @@ class ReportController extends Controller
         'expenses'     => ['icon' => 'receipt', 'wide' => false],
         'tasks'        => ['icon' => 'check-square', 'wide' => false],
         'productivity' => ['icon' => 'zap', 'wide' => false],
-        'monthly'      => ['icon' => 'calendar-clock', 'wide' => true],
+        'monthly'      => ['icon' => 'calendar-clock', 'wide' => false],
     ];
 
     public function index(Request $request)
