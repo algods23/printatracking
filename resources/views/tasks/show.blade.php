@@ -151,12 +151,89 @@
 
         <!-- Image -->
         @if($task->image_path)
+            @php
+                $imageFilename = basename($task->image_path);
+                $imageUrl = asset('storage/' . $task->image_path);
+            @endphp
             <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="font-semibold text-gray-900 dark:text-white">Task Image</h3>
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex justify-between items-center">
+                    <h3 class="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <i data-lucide="image" class="w-5 h-5 text-yellow-500"></i>
+                        Task Image
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <a href="{{ $imageUrl }}" target="_blank" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors text-xs font-semibold flex items-center gap-1.5" title="View Fullscreen">
+                            <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                            View
+                        </a>
+                        <a href="{{ $imageUrl }}" download="{{ $imageFilename }}" class="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg transition-colors text-xs font-semibold flex items-center gap-1.5" title="Download Image">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            Download
+                        </a>
+                    </div>
                 </div>
                 <div class="p-6">
-                    <img src="{{ asset('storage/' . $task->image_path) }}" alt="Task image" class="max-w-full h-auto rounded-lg">
+                    <img src="{{ $imageUrl }}" alt="Task image" class="max-w-full h-auto rounded-lg mx-auto shadow-sm">
+                </div>
+            </div>
+        @endif
+
+        <!-- Attachments -->
+        @if(!empty($task->attachments) && count($task->attachments) > 0)
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex justify-between items-center">
+                    <h3 class="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <i data-lucide="paperclip" class="w-5 h-5 text-yellow-500"></i>
+                        Task Attachments ({{ count($task->attachments) }})
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        @foreach($task->attachments as $attachment)
+                            @php
+                                $filename = basename($attachment);
+                                $extension = strtolower(pathinfo($attachment, PATHINFO_EXTENSION));
+                                $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp']);
+                                $fileUrl = asset('storage/' . $attachment);
+                            @endphp
+                            <div class="flex flex-col border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900/50 hover:border-yellow-500 dark:hover:border-yellow-500 transition-all duration-200 shadow-sm group">
+                                @if($isImage)
+                                    <div class="h-32 bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden border-b border-gray-200 dark:border-gray-700 relative">
+                                        <img src="{{ $fileUrl }}" alt="{{ $filename }}" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300">
+                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                            <a href="{{ $fileUrl }}" target="_blank" class="p-2 bg-white text-gray-900 rounded-full hover:bg-yellow-500 hover:text-black transition-colors" title="View Fullscreen">
+                                                <i data-lucide="eye" class="w-4 h-4"></i>
+                                            </a>
+                                            <a href="{{ $fileUrl }}" download class="p-2 bg-white text-gray-900 rounded-full hover:bg-yellow-500 hover:text-black transition-colors" title="Download">
+                                                <i data-lucide="download" class="w-4 h-4"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                @else
+                                    <div class="h-32 bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center border-b border-gray-200 dark:border-gray-700 relative">
+                                        <i data-lucide="file-text" class="w-10 h-10 text-gray-400 group-hover:scale-110 transition-transform duration-300"></i>
+                                        <span class="text-xs font-semibold uppercase px-2 py-0.5 bg-yellow-500/10 text-yellow-600 rounded mt-2">{{ $extension ?: 'file' }}</span>
+                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                            <a href="{{ $fileUrl }}" target="_blank" class="p-2 bg-white text-gray-900 rounded-full hover:bg-yellow-500 hover:text-black transition-colors" title="Open File">
+                                                <i data-lucide="eye" class="w-4 h-4"></i>
+                                            </a>
+                                            <a href="{{ $fileUrl }}" download class="p-2 bg-white text-gray-900 rounded-full hover:bg-yellow-500 hover:text-black transition-colors" title="Download">
+                                                <i data-lucide="download" class="w-4 h-4"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endif
+                                <div class="p-3 flex items-center justify-between gap-2 bg-white dark:bg-gray-800">
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate" title="{{ $filename }}">{{ $filename }}</p>
+                                    </div>
+                                    <a href="{{ $fileUrl }}" download class="p-1.5 text-gray-500 hover:text-yellow-600 dark:text-gray-400 dark:hover:text-yellow-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors" title="Download">
+                                        <i data-lucide="download" class="w-4 h-4"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             </div>
         @endif

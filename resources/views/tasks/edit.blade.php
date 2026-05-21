@@ -197,14 +197,37 @@
             </div>
             <p class="text-xs text-gray-500 dark:text-gray-400 -mt-4">Saving updates the task amount from job orders. Payment status is recalculated from existing receipts.</p>
 
-            @if(!empty($task->attachments))
+            @if(!empty($task->attachments) && count($task->attachments) > 0)
                 <div>
-                    <p class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Current attachments</p>
-                    <ul class="text-sm space-y-1 text-yellow-600 dark:text-yellow-400">
+                    <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Current Attachments</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         @foreach($task->attachments as $path)
-                            <li><a href="{{ asset('storage/' . $path) }}" target="_blank" rel="noopener" class="hover:underline">{{ $path }}</a></li>
+                            @php
+                                $filename = basename($path);
+                                $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                                $isImg = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp']);
+                                $fileUrl = asset('storage/' . $path);
+                            @endphp
+                            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700 text-sm">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    @if($isImg)
+                                        <i data-lucide="image" class="w-4 h-4 text-yellow-500 shrink-0"></i>
+                                    @else
+                                        <i data-lucide="file-text" class="w-4 h-4 text-gray-400 shrink-0"></i>
+                                    @endif
+                                    <span class="truncate text-gray-700 dark:text-gray-300" title="{{ $filename }}">{{ $filename }}</span>
+                                </div>
+                                <div class="flex items-center gap-1 shrink-0">
+                                    <a href="{{ $fileUrl }}" target="_blank" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-yellow-600 rounded transition-colors" title="View">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </a>
+                                    <a href="{{ $fileUrl }}" download class="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-yellow-600 rounded transition-colors" title="Download">
+                                        <i data-lucide="download" class="w-4 h-4"></i>
+                                    </a>
+                                </div>
+                            </div>
                         @endforeach
-                    </ul>
+                    </div>
                 </div>
             @endif
 
