@@ -32,22 +32,10 @@
             </a>
 
             <!-- Reports -->
-            <div x-data="{ open: {{ request()->routeIs('reports.*') ? 'true' : 'false' }} }">
-                <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors group">
-                    <span class="flex items-center gap-3">
-                        <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
-                        <span>Reports</span>
-                    </span>
-                    <i data-lucide="chevron-down" class="w-4 h-4 group-open:rotate-180 transition-transform" :class="{ 'rotate-180': open }"></i>
-                </button>
-                <div x-show="open" class="pl-4 space-y-1 mt-1">
-                    <a href="{{ route('reports.sales') }}" class="block px-4 py-2 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded transition-colors">Sales Report</a>
-                    <a href="{{ route('reports.expenses') }}" class="block px-4 py-2 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded transition-colors">Expense Report</a>
-                    <a href="{{ route('reports.tasks') }}" class="block px-4 py-2 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded transition-colors">Task Report</a>
-                    <a href="{{ route('reports.productivity') }}" class="block px-4 py-2 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded transition-colors">Productivity</a>
-                    <a href="{{ route('reports.monthly') }}" class="block px-4 py-2 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded transition-colors">Monthly Summary</a>
-                </div>
-            </div>
+            <a href="{{ route('reports.index') }}" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors {{ request()->routeIs('reports.*') ? 'bg-yellow-500 text-black' : '' }}">
+                <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                <span>Reports</span>
+            </a>
 
             <!-- Settings -->
             @if(auth()->user()->isAdmin())

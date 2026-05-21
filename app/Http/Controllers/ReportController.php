@@ -6,222 +6,230 @@ use App\Models\Task;
 use App\Models\Receipt;
 use App\Models\Expense;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Exports\ReportExcelExporter;
 use Carbon\Carbon;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Validation\Rule;
 
 class ReportController extends Controller
 {
-    public function salesReport(Request $request)
+    private const REPORT_TYPES = [
+        'sales'        => 'Sales report',
+        'expenses'     => 'Expense report',
+        'tasks'        => 'Task report',
+        'productivity' => 'Productivity',
+        'monthly'      => 'Monthly summary',
+    ];
+
+    private const REPORT_TYPE_META = [
+        'sales'        => ['icon' => 'line-chart', 'wide' => false],
+        'expenses'     => ['icon' => 'receipt', 'wide' => false],
+        'tasks'        => ['icon' => 'check-square', 'wide' => false],
+        'productivity' => ['icon' => 'zap', 'wide' => false],
+        'monthly'      => ['icon' => 'calendar-clock', 'wide' => true],
+    ];
+
+    public function index(Request $request)
     {
-        $query = Receipt::query();
+        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
+        $selectedTypes = $request->input('types', []);
 
-        if ($request->start_date) {
-            $query->whereDate('created_at', '>=', $request->start_date);
+        $reports = [];
+
+        if ($request->boolean('generate')) {
+            $validated = $request->validate([
+                'types'        => ['required', 'array', 'min:1'],
+                'types.*'      => [Rule::in(array_keys(self::REPORT_TYPES))],
+                'start_date'   => 'required|date',
+                'end_date'     => 'required|date|after_or_equal:start_date',
+            ]);
+
+            $startDate = $validated['start_date'];
+            $endDate = $validated['end_date'];
+            $selectedTypes = $validated['types'];
+
+            foreach ($selectedTypes as $type) {
+                $reports[$type] = $this->buildReportData($type, $startDate, $endDate);
+            }
         }
 
-        if ($request->end_date) {
-            $query->whereDate('created_at', '<=', $request->end_date);
-        }
-
-        $receipts = $query->with(['task', 'issuedBy'])->get();
-
-        $totalSales = $receipts->sum('total');
-        $totalDiscount = $receipts->sum('discount');
-        $totalTax = $receipts->sum('tax');
-
-        $paymentMethodBreakdown = $receipts->groupBy('payment_method')
-            ->map(fn($group) => $group->sum('total'));
-
-        return view('reports.sales', compact(
-            'receipts',
-            'totalSales',
-            'totalDiscount',
-            'totalTax',
-            'paymentMethodBreakdown'
-        ));
+        return view('reports.index', [
+            'reportTypes'    => self::REPORT_TYPES,
+            'reportTypeMeta' => self::REPORT_TYPE_META,
+            'startDate'      => $startDate,
+            'endDate'        => $endDate,
+            'selectedTypes'  => $selectedTypes,
+            'reports'        => $reports,
+        ]);
     }
 
-    public function expenseReport(Request $request)
+    public function exportExcel(Request $request, ReportExcelExporter $exporter)
     {
-        $query = Expense::query();
+        $baseRules = [
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+        ];
 
-        if ($request->start_date) {
-            $query->whereDate('date', '>=', $request->start_date);
+        if ($request->has('types')) {
+            $validated = $request->validate(array_merge($baseRules, [
+                'types'   => ['required', 'array', 'min:1'],
+                'types.*' => [Rule::in(array_keys(self::REPORT_TYPES))],
+            ]));
+
+            $reportsByType = [];
+            foreach ($validated['types'] as $type) {
+                $reportsByType[$type] = $this->buildReportData($type, $validated['start_date'], $validated['end_date']);
+            }
+
+            return $exporter->downloadMultiple(
+                $reportsByType,
+                $validated['start_date'],
+                $validated['end_date']
+            );
         }
 
-        if ($request->end_date) {
-            $query->whereDate('date', '<=', $request->end_date);
-        }
+        $validated = $request->validate(array_merge($baseRules, [
+            'type' => ['required', Rule::in(array_keys(self::REPORT_TYPES))],
+        ]));
 
-        $expenses = $query->with('recordedBy')->get();
+        $data = $this->buildReportData($validated['type'], $validated['start_date'], $validated['end_date']);
 
-        $totalExpenses = $expenses->sum('amount');
-        $categoryBreakdown = $expenses->groupBy('category')
-            ->map(fn($group) => $group->sum('amount'));
-
-        return view('reports.expenses', compact(
-            'expenses',
-            'totalExpenses',
-            'categoryBreakdown'
-        ));
+        return $exporter->download(
+            $validated['type'],
+            $data,
+            $validated['start_date'],
+            $validated['end_date']
+        );
     }
 
-    public function taskReport(Request $request)
+    private function buildReportData(string $type, string $startDate, string $endDate): array
     {
-        $query = Task::query();
-
-        if ($request->status) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->start_date) {
-            $query->whereDate('created_at', '>=', $request->start_date);
-        }
-
-        if ($request->end_date) {
-            $query->whereDate('created_at', '<=', $request->end_date);
-        }
-
-        $tasks = $query->with('assignedTo')->get();
-
-        $totalTasks = $tasks->count();
-        $completedTasks = $tasks->whereIn('status', ['Completed', 'Received'])->count();
-        $completionRate = $totalTasks > 0 ? ($completedTasks / $totalTasks) * 100 : 0;
-        $statusBreakdown = $tasks->groupBy('status')->map->count();
-
-        return view('reports.tasks', compact(
-            'tasks',
-            'totalTasks',
-            'completedTasks',
-            'completionRate',
-            'statusBreakdown'
-        ));
+        return match ($type) {
+            'sales'        => $this->salesData($startDate, $endDate),
+            'expenses'     => $this->expenseData($startDate, $endDate),
+            'tasks'        => $this->taskData($startDate, $endDate),
+            'productivity' => $this->productivityData($startDate, $endDate),
+            'monthly'      => $this->monthlyData($startDate, $endDate),
+            default        => [],
+        };
     }
 
-    public function productivityReport(Request $request)
+    private function salesData(string $startDate, string $endDate): array
     {
-        $start_date = $request->start_date ?? Carbon::now()->startOfMonth();
-        $end_date = $request->end_date ?? Carbon::now();
+        $receipts = Receipt::whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate)
+            ->with(['task', 'issuedBy'])
+            ->orderByDesc('created_at')
+            ->get();
 
-        $staffProductivity = Task::whereDate('created_at', '>=', $start_date)
-            ->whereDate('created_at', '<=', $end_date)
+        return [
+            'type'                   => 'sales',
+            'receipts'               => $receipts,
+            'totalSales'             => $receipts->sum('cash_received'),
+            'totalDiscount'          => $receipts->sum('discount'),
+            'totalTax'               => $receipts->sum('tax'),
+            'paymentMethodBreakdown' => $receipts->groupBy('payment_method')->map(fn ($g) => $g->sum('cash_received')),
+        ];
+    }
+
+    private function expenseData(string $startDate, string $endDate): array
+    {
+        $expenses = Expense::whereDate('date', '>=', $startDate)
+            ->whereDate('date', '<=', $endDate)
+            ->with('recordedBy')
+            ->orderByDesc('date')
+            ->get();
+
+        return [
+            'type'              => 'expenses',
+            'expenses'          => $expenses,
+            'totalExpenses'     => $expenses->sum('amount'),
+            'categoryBreakdown' => $expenses->groupBy('category')->map(fn ($g) => $g->sum('amount')),
+        ];
+    }
+
+    private function taskData(string $startDate, string $endDate): array
+    {
+        $tasks = Task::whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate)
             ->with('assignedTo')
-            ->get()
-            ->groupBy('assigned_to')
-            ->map(function ($tasks) {
-                return [
-                    'total' => $tasks->count(),
-                    'completed' => $tasks->whereIn('status', ['Completed', 'Received'])->count(),
-                    'pending' => $tasks->where('status', 'Pending')->count(),
-                ];
-            });
+            ->orderByDesc('created_at')
+            ->get();
 
-        return view('reports.productivity', compact('staffProductivity'));
+        $completedTasks = $tasks->whereIn('status', ['Completed', 'Received'])->count();
+        $totalTasks = $tasks->count();
+
+        return [
+            'type'            => 'tasks',
+            'tasks'           => $tasks,
+            'totalTasks'      => $totalTasks,
+            'completedTasks'  => $completedTasks,
+            'completionRate'  => $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 1) : 0,
+            'statusBreakdown' => $tasks->groupBy('status')->map->count(),
+        ];
     }
 
-    public function monthlySummary(Request $request)
+    private function productivityData(string $startDate, string $endDate): array
     {
-        $year = $request->year ?? Carbon::now()->year;
+        $tasks = Task::whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate)
+            ->with('assignedTo')
+            ->get();
 
-        $monthlySales = [];
-        $monthlyExpenses = [];
+        $staffProductivity = $tasks->groupBy('assigned_to')->map(function ($group) {
+            $name = $group->first()->assignedTo?->name ?? 'Unassigned';
 
-        for ($month = 1; $month <= 12; $month++) {
-            $monthlyReceipts = Receipt::whereYear('created_at', $year)
-                ->whereMonth('created_at', $month)
-                ->sum('total');
+            return [
+                'name'      => $name,
+                'total'     => $group->count(),
+                'completed' => $group->whereIn('status', ['Completed', 'Received'])->count(),
+                'pending'   => $group->where('status', 'Pending')->count(),
+            ];
+        })->values();
 
-            $monthlyExpense = Expense::whereYear('date', $year)
-                ->whereMonth('date', $month)
+        return [
+            'type'              => 'productivity',
+            'staffProductivity' => $staffProductivity,
+        ];
+    }
+
+    private function monthlyData(string $startDate, string $endDate): array
+    {
+        $rangeStart = Carbon::parse($startDate)->startOfDay();
+        $rangeEnd = Carbon::parse($endDate)->endOfDay();
+        $cursor = $rangeStart->copy()->startOfMonth();
+
+        $rows = [];
+        $totalSales = 0;
+        $totalExpenses = 0;
+
+        while ($cursor <= $rangeEnd) {
+            $from = $cursor->copy()->startOfMonth()->max($rangeStart);
+            $to = $cursor->copy()->endOfMonth()->min($rangeEnd);
+
+            $sales = (float) Receipt::whereBetween('created_at', [$from, $to])->sum('cash_received');
+
+            $expenses = (float) Expense::whereBetween('date', [$from->toDateString(), $to->toDateString()])
                 ->sum('amount');
 
-            $monthlySales[$month] = $monthlyReceipts;
-            $monthlyExpenses[$month] = $monthlyExpense;
+            $rows[] = [
+                'label'    => $cursor->format('F Y'),
+                'sales'    => $sales,
+                'expenses' => $expenses,
+                'profit'   => $sales - $expenses,
+            ];
+
+            $totalSales += $sales;
+            $totalExpenses += $expenses;
+            $cursor->addMonth();
         }
-
-        return view('reports.monthly', compact('monthlySales', 'monthlyExpenses', 'year'));
-    }
-
-    public function exportPdf($report, Request $request)
-    {
-        switch ($report) {
-            case 'sales':
-                $view = 'reports.sales';
-                $data = $this->getSalesData($request);
-                $filename = 'sales-report.pdf';
-                break;
-            case 'expenses':
-                $view = 'reports.expenses';
-                $data = $this->getExpensesData($request);
-                $filename = 'expense-report.pdf';
-                break;
-            case 'tasks':
-                $view = 'reports.tasks';
-                $data = $this->getTasksData($request);
-                $filename = 'task-report.pdf';
-                break;
-            default:
-                return redirect()->back();
-        }
-
-        $pdf = Pdf::loadView($view, $data);
-        return $pdf->download($filename);
-    }
-
-    private function getSalesData(Request $request)
-    {
-        $query = Receipt::query();
-
-        if ($request->start_date) {
-            $query->whereDate('created_at', '>=', $request->start_date);
-        }
-
-        if ($request->end_date) {
-            $query->whereDate('created_at', '<=', $request->end_date);
-        }
-
-        $receipts = $query->with(['task', 'issuedBy'])->get();
 
         return [
-            'receipts' => $receipts,
-            'totalSales' => $receipts->sum('total'),
-        ];
-    }
-
-    private function getExpensesData(Request $request)
-    {
-        $query = Expense::query();
-
-        if ($request->start_date) {
-            $query->whereDate('date', '>=', $request->start_date);
-        }
-
-        if ($request->end_date) {
-            $query->whereDate('date', '<=', $request->end_date);
-        }
-
-        $expenses = $query->with('recordedBy')->get();
-
-        return [
-            'expenses' => $expenses,
-            'totalExpenses' => $expenses->sum('amount'),
-        ];
-    }
-
-    private function getTasksData(Request $request)
-    {
-        $query = Task::query();
-
-        if ($request->status) {
-            $query->where('status', $request->status);
-        }
-
-        $tasks = $query->with('assignedTo')->get();
-
-        return [
-            'tasks' => $tasks,
-            'totalTasks' => $tasks->count(),
+            'type'          => 'monthly',
+            'monthlyRows'   => $rows,
+            'totalSales'    => $totalSales,
+            'totalExpenses' => $totalExpenses,
+            'netProfit'     => $totalSales - $totalExpenses,
         ];
     }
 }

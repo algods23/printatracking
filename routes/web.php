@@ -39,12 +39,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/expenses/report', [ExpenseController::class, 'report'])->name('expenses.report');
 
     // Reports
-    Route::get('/reports/sales', [ReportController::class, 'salesReport'])->name('reports.sales');
-    Route::get('/reports/expenses', [ReportController::class, 'expenseReport'])->name('reports.expenses');
-    Route::get('/reports/tasks', [ReportController::class, 'taskReport'])->name('reports.tasks');
-    Route::get('/reports/productivity', [ReportController::class, 'productivityReport'])->name('reports.productivity');
-    Route::get('/reports/monthly', [ReportController::class, 'monthlySummary'])->name('reports.monthly');
-    Route::get('/reports/{report}/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export-pdf');
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/export-excel', [ReportController::class, 'exportExcel'])->name('reports.export-excel');
 
     // Settings
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
