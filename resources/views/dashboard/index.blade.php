@@ -115,38 +115,7 @@
     </div>
 </div>
 
-<!-- Recent Activities -->
-<div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Recent Activities</h3>
-    <div class="space-y-4">
-        @forelse($recentActivities as $activity)
-            <div class="flex items-start gap-4 pb-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
-                <div class="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
-                    @if($activity->action == 'login')
-                        <i data-lucide="log-in" class="w-5 h-5 text-blue-500"></i>
-                    @elseif($activity->action == 'logout')
-                        <i data-lucide="log-out" class="w-5 h-5 text-gray-500"></i>
-                    @elseif($activity->action == 'created')
-                        <i data-lucide="plus-circle" class="w-5 h-5 text-green-500"></i>
-                    @elseif($activity->action == 'updated')
-                        <i data-lucide="edit" class="w-5 h-5 text-yellow-500"></i>
-                    @elseif($activity->action == 'deleted')
-                        <i data-lucide="trash-2" class="w-5 h-5 text-red-500"></i>
-                    @else
-                        <i data-lucide="activity" class="w-5 h-5 text-gray-500"></i>
-                    @endif
-                </div>
-                <div class="flex-1">
-                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $activity->user->name }}</p>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ $activity->description }}</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">{{ $activity->created_at->diffForHumans() }}</p>
-                </div>
-            </div>
-        @empty
-            <p class="text-gray-500 dark:text-gray-400 text-center py-8">No recent activities</p>
-        @endforelse
-    </div>
-</div>
+
 
 @endsection
 

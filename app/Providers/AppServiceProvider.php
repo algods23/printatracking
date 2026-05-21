@@ -14,11 +14,14 @@ class AppServiceProvider extends ServiceProvider
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        //
+        \Illuminate\Support\Facades\View::composer('components.topbar', function ($view) {
+            $activities = \App\Models\ActivityLog::with('user')
+                ->latest()
+                ->limit(5)
+                ->get();
+            $view->with('topbarActivities', $activities);
+        });
     }
 }
