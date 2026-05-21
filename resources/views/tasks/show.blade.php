@@ -51,6 +51,9 @@
                                 @case('Completed')
                                     <span class="inline-block px-3 py-1 bg-green-500/10 text-green-600 dark:text-green-400 rounded-full text-sm">Completed</span>
                                 @break
+                                @case('Received')
+                                    <span class="inline-block px-3 py-1 bg-blue-600 text-white rounded-full text-sm">Received</span>
+                                @break
                                 @case('Cancelled')
                                     <span class="inline-block px-3 py-1 bg-red-500/10 text-red-600 dark:text-red-400 rounded-full text-sm">Cancelled</span>
                                 @break
@@ -251,17 +254,44 @@
                     <i data-lucide="printer" class="w-5 h-5"></i>
                     Print Job Order
                 </a>
-                @if($remainingAmount > 0)
+
+                @if($task->status !== 'Received')
+                @if(! in_array($task->status, ['Completed', 'Received', 'Cancelled'], true))
+                <form action="{{ route('tasks.status', $task) }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="status" value="Completed">
+                    <button type="submit" class="block w-full px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors text-center flex items-center justify-center gap-2">
+                        <i data-lucide="check-circle" class="w-5 h-5"></i>
+                        Mark as Complete
+                    </button>
+                </form>
+                @endif
+
+                @if($task->payment_status !== 'Paid')
                 <a href="{{ route('receipts.create', ['task_id' => $task->id]) }}" class="block w-full px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors text-center flex items-center justify-center gap-2">
                     <i data-lucide="receipt" class="w-5 h-5"></i>
                     Make a payment
                 </a>
+                @elseif($task->status === 'Completed')
+                <form id="receiveTaskForm" action="{{ route('tasks.receive', $task) }}" method="POST">
+                    @csrf
+                    <button type="button" onclick="openReceiveModal()" class="block w-full px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors text-center flex items-center justify-center gap-2">
+                        <i data-lucide="package-check" class="w-5 h-5"></i>
+                        Received by Customer
+                    </button>
+                </form>
+                @elseif($task->status === 'Received')
+                <button type="button" disabled class="block w-full px-4 py-2 bg-green-500 text-white font-semibold rounded-lg text-center flex items-center justify-center gap-2 cursor-default">
+                    <i data-lucide="package-check" class="w-5 h-5"></i>
+                    Received by Customer
+                </button>
                 @else
-                <button type="button" disabled class="block w-full px-4 py-2 bg-green-500/40 text-white/80 font-semibold rounded-lg text-center flex items-center justify-center gap-2 cursor-not-allowed">
-                    <i data-lucide="check-circle" class="w-5 h-5"></i>
-                    Fully Paid
+                <button type="button" disabled class="block w-full px-4 py-2 bg-gray-500/40 text-white/80 font-semibold rounded-lg text-center flex items-center justify-center gap-2 cursor-not-allowed">
+                    <i data-lucide="clock" class="w-5 h-5"></i>
+                    Waiting for Completion
                 </button>
                 @endif
+
                 <a href="{{ route('tasks.edit', $task) }}" class="block w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors text-center flex items-center justify-center gap-2">
                     <i data-lucide="edit" class="w-5 h-5"></i>
                     Edit Task
@@ -274,6 +304,7 @@
                         Delete Task
                     </button>
                 </form>
+                @endif
             </div>
         </div>
 
@@ -361,10 +392,73 @@
     </div>
 </div>
 
+@if($task->payment_status === 'Paid' && $task->status === 'Completed')
+<div id="receiveModal" class="fixed inset-0 z-50 hidden items-center justify-center px-4 py-6">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeReceiveModal()"></div>
+    <div class="relative w-full max-w-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden">
+        <div class="p-6">
+            <div class="flex items-start gap-4">
+                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-green-500/10 text-green-600 dark:text-green-400">
+                    <i data-lucide="package-check" class="w-6 h-6"></i>
+                </div>
+                <div class="min-w-0">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Confirm Customer Receipt</h3>
+                    <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
+                        Mark this task as received by the customer?
+                    </p>
+                    <div class="mt-4 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3">
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Task</p>
+                        <p class="font-semibold text-gray-900 dark:text-white">{{ $task->task_id }} · {{ $task->customer_name }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center justify-end gap-3 bg-gray-50 dark:bg-gray-900 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+            <button type="button" onclick="closeReceiveModal()" class="px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-lg transition-colors">
+                Cancel
+            </button>
+            <button type="button" onclick="submitReceiveTask()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors inline-flex items-center gap-2">
+                <i data-lucide="check" class="w-4 h-4"></i>
+                Confirm
+            </button>
+        </div>
+    </div>
+</div>
+@endif
+
 @endsection
 
 @section('scripts')
 <script>
     lucide.createIcons();
+
+    function openReceiveModal() {
+        const modal = document.getElementById('receiveModal');
+        if (!modal) return;
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+    }
+
+    function closeReceiveModal() {
+        const modal = document.getElementById('receiveModal');
+        if (!modal) return;
+
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    function submitReceiveTask() {
+        const form = document.getElementById('receiveTaskForm');
+        if (form) form.submit();
+    }
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeReceiveModal();
+        }
+    });
 </script>
 @endsection

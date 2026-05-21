@@ -20,6 +20,7 @@
         <option value="Printing">Printing</option>
         <option value="Installing">Installing</option>
         <option value="Completed">Completed</option>
+        <option value="Received">Received</option>
         <option value="Cancelled">Cancelled</option>
     </select>
     <select onchange="filterTasks()" id="priorityFilter" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
@@ -100,6 +101,9 @@
                                 @case('Completed')
                                     <span class="inline-block px-3 py-1 bg-green-500/10 text-green-600 dark:text-green-400 rounded-full text-xs font-medium">Completed</span>
                                 @break
+                                @case('Received')
+                                    <span class="inline-block px-3 py-1 bg-blue-600 text-white rounded-full text-xs font-medium">Received</span>
+                                @break
                                 @case('Cancelled')
                                     <span class="inline-block px-3 py-1 bg-red-500/10 text-red-600 dark:text-red-400 rounded-full text-xs font-medium">Cancelled</span>
                                 @break
@@ -132,6 +136,7 @@
                                 <a href="{{ route('tasks.show', $task) }}" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 rounded transition-colors">
                                     <i data-lucide="eye" class="w-4 h-4"></i>
                                 </a>
+                                @if($task->status !== 'Received')
                                 <a href="{{ route('tasks.edit', $task) }}" class="p-2 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/10 rounded transition-colors">
                                     <i data-lucide="edit" class="w-4 h-4"></i>
                                 </a>
@@ -142,6 +147,7 @@
                                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                                     </button>
                                 </form>
+                                @endif
                             </div>
                         </td>
                     </tr>

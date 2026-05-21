@@ -206,7 +206,7 @@ class TaskController extends Controller
             'assigned_to'       => 'nullable|exists:users,id',
             'due_date'          => 'required|date',
             'due_time'          => 'nullable|date_format:H:i',
-            'status'            => 'required|in:Pending,Designing,Printing,Installing,Completed,Cancelled',
+            'status'            => 'required|in:Pending,Designing,Printing,Installing,Completed,Received,Cancelled',
             'priority'          => 'required|in:Low,Medium,High,Urgent',
             'notes'             => 'nullable|string',
             'items'             => 'required|array|min:1',
@@ -266,6 +266,59 @@ class TaskController extends Controller
         ]);
 
         return redirect()->route('tasks.show', $task)->with('success', 'Task updated successfully');
+    }
+
+    public function updateStatus(Request $request, Task $task)
+    {
+        $this->authorizeTaskAccess($task);
+
+        $validated = $request->validate([
+            'status' => 'required|in:Pending,Designing,Printing,Installing,Completed,Cancelled',
+        ]);
+
+        if ($task->status !== $validated['status']) {
+            $oldStatus = $task->status;
+            $task->update(['status' => $validated['status']]);
+
+            ActivityLog::create([
+                'user_id'     => Auth::id(),
+                'action'      => 'updated',
+                'model_type'  => Task::class,
+                'model_id'    => $task->id,
+                'description' => "Task {$task->task_id} status changed from {$oldStatus} to {$validated['status']}",
+                'ip_address'  => request()->ip(),
+            ]);
+        }
+
+        return redirect()->route('tasks.show', $task)->with('success', 'Task status updated successfully.');
+    }
+
+    public function markReceived(Task $task)
+    {
+        $this->authorizeTaskAccess($task);
+
+        if ($task->payment_status !== 'Paid') {
+            return redirect()->route('tasks.show', $task)->with('error', 'Task must be fully paid before it can be marked as received.');
+        }
+
+        if ($task->status !== 'Completed' && $task->status !== 'Received') {
+            return redirect()->route('tasks.show', $task)->with('error', 'Task must be completed before it can be marked as received.');
+        }
+
+        if ($task->status !== 'Received') {
+            $task->update(['status' => 'Received']);
+
+            ActivityLog::create([
+                'user_id'     => Auth::id(),
+                'action'      => 'updated',
+                'model_type'  => Task::class,
+                'model_id'    => $task->id,
+                'description' => "Task {$task->task_id} marked as received by customer",
+                'ip_address'  => request()->ip(),
+            ]);
+        }
+
+        return redirect()->route('tasks.show', $task)->with('success', 'Task marked as received by customer.');
     }
 
     public function destroy(Task $task)

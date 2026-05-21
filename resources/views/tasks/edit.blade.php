@@ -69,7 +69,7 @@
                 <div class="md:col-span-2">
                     <label for="status" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Status *</label>
                     <select id="status" name="status" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('status') border-red-500 @enderror">
-                        @foreach(['Pending', 'Designing', 'Printing', 'Installing', 'Completed', 'Cancelled'] as $status)
+                        @foreach(['Pending', 'Designing', 'Printing', 'Installing', 'Completed', 'Received', 'Cancelled'] as $status)
                             <option value="{{ $status }}" {{ old('status', $task->status) == $status ? 'selected' : '' }}>{{ $status }}</option>
                         @endforeach
                     </select>

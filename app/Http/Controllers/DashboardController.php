@@ -16,7 +16,7 @@ class DashboardController extends Controller
         $totalTasks = Task::count();
         $pendingTasks = Task::where('status', 'Pending')->count();
         $ongoingTasks = Task::whereIn('status', ['Designing', 'Printing', 'Installing'])->count();
-        $completedTasks = Task::where('status', 'Completed')->count();
+        $completedTasks = Task::whereIn('status', ['Completed', 'Received'])->count();
 
         // Calculate sales from actual payments only. Unpaid job orders have no receipts,
         // so they should not increase revenue totals.

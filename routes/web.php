@@ -22,6 +22,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
     // Tasks
+    Route::post('/tasks/{task}/status', [TaskController::class, 'updateStatus'])->name('tasks.status');
+    Route::post('/tasks/{task}/receive', [TaskController::class, 'markReceived'])->name('tasks.receive');
     Route::resource('tasks', TaskController::class);
     Route::get('/tasks/{task}/job-order-print', [TaskController::class, 'printJobOrder'])->name('tasks.job-order-print');
     Route::get('/tasks/search', [TaskController::class, 'search'])->name('tasks.search');

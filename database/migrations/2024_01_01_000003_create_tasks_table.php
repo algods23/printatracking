@@ -21,7 +21,7 @@ return new class extends Migration
             $table->enum('sticker_type', ['Vinyl', 'Paper', 'Label', 'Die-cut', 'Other'])->nullable();
             $table->foreignId('assigned_to')->nullable()->constrained('users')->onDelete('set null');
             $table->date('due_date');
-            $table->enum('status', ['Pending', 'Designing', 'Printing', 'Installing', 'Completed', 'Cancelled'])->default('Pending');
+            $table->enum('status', ['Pending', 'Designing', 'Printing', 'Installing', 'Completed', 'Received', 'Cancelled'])->default('Pending');
             $table->enum('priority', ['Low', 'Medium', 'High', 'Urgent'])->default('Medium');
             $table->text('notes')->nullable();
             $table->decimal('amount', 12, 2);

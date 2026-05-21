@@ -86,7 +86,7 @@ class ReportController extends Controller
         $tasks = $query->with('assignedTo')->get();
 
         $totalTasks = $tasks->count();
-        $completedTasks = $tasks->where('status', 'Completed')->count();
+        $completedTasks = $tasks->whereIn('status', ['Completed', 'Received'])->count();
         $completionRate = $totalTasks > 0 ? ($completedTasks / $totalTasks) * 100 : 0;
         $statusBreakdown = $tasks->groupBy('status')->map->count();
 
@@ -112,7 +112,7 @@ class ReportController extends Controller
             ->map(function ($tasks) {
                 return [
                     'total' => $tasks->count(),
-                    'completed' => $tasks->where('status', 'Completed')->count(),
+                    'completed' => $tasks->whereIn('status', ['Completed', 'Received'])->count(),
                     'pending' => $tasks->where('status', 'Pending')->count(),
                 ];
             });
