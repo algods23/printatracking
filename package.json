@@ -5,15 +5,17 @@
     "name": "printa-signages",
     "version": "1.0.0",
     "description": "Professional Signages & Stickers Management System",
-    "main": "electron/main.js",
+    "main": "electron/main.cjs",
     "homepage": "",
     "scripts": {
         "dev": "vite",
         "build": "vite build",
         "electron": "electron .",
         "electron-dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
-        "electron-build": "npm run build && electron-builder",
-        "electron-build-win": "npm run build && electron-builder --win",
+        "desktop:prepare": "powershell -ExecutionPolicy Bypass -File scripts/prepare-desktop.ps1",
+        "desktop:build": "powershell -ExecutionPolicy Bypass -File scripts/build-installer.ps1",
+        "electron-build": "npm run build && npm run desktop:prepare && electron-builder",
+        "electron-build-win": "npm run build && npm run desktop:prepare && electron-builder --win",
         "electron-build-mac": "npm run build && electron-builder --mac",
         "electron-build-linux": "npm run build && electron-builder --linux",
         "electron-pack": "npm run build && electron-builder --dir",
@@ -34,7 +36,7 @@
     },
     "dependencies": {
         "chart.js": "^4.4.0",
-        "lucide-vue-next": "latest"
+        "lucide": "latest"
     },
     "build": {
         "appId": "com.printa.signages",
@@ -43,10 +45,29 @@
             "buildResources": "assets"
         },
         "files": [
-            "dist/**/*",
             "electron/**/*",
-            "node_modules/**/*",
             "package.json"
+        ],
+        "extraResources": [
+            {
+                "from": "desktop/build/laravel-app",
+                "to": "laravel-app"
+            },
+            {
+                "from": "desktop/runtime",
+                "to": "runtime",
+                "filter": [
+                    "**/*",
+                    "!README.md"
+                ]
+            },
+            {
+                "from": "assets",
+                "to": "assets",
+                "filter": [
+                    "**/*"
+                ]
+            }
         ],
         "win": {
             "target": [
@@ -63,15 +84,17 @@
                     ]
                 }
             ],
-            "certificateFile": null,
-            "certificatePassword": null
+            "icon": "assets/icon.ico"
         },
         "nsis": {
             "oneClick": false,
+            "perMachine": false,
             "allowToChangeInstallationDirectory": true,
             "createDesktopShortcut": true,
             "createStartMenuShortcut": true,
-            "shortcutName": "Printa Signages"
+            "shortcutName": "Printa Signages",
+            "runAfterFinish": true,
+            "deleteAppDataOnUninstall": false
         },
         "mac": {
             "target": [
