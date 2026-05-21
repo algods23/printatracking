@@ -18,7 +18,7 @@ class TaskController extends Controller
     {
         $tasks = $this->visibleTasksQuery()
             ->with('assignedTo')
-            ->latest()
+            ->orderBy('due_date', 'asc')
             ->paginate(15);
 
         return view('tasks.index', compact('tasks'));
@@ -39,12 +39,12 @@ class TaskController extends Controller
             'signage_type'     => 'nullable|in:Digital,Vinyl,Neon,LED,Wooden,Metal,Other',
             'sticker_type'     => 'nullable|in:Vinyl,Paper,Label,Die-cut,Other',
             'assigned_to'      => 'nullable|exists:users,id',
-            'due_date'         => 'required|date|after:today',
+            'due_date'         => 'required|date|after_or_equal:today',
             'due_time'         => 'nullable|date_format:H:i',
             'priority'         => 'required|in:Low,Medium,High,Urgent',
             'notes'            => 'nullable|string',
             'payment_amount'   => 'nullable|numeric|min:0',
-            'payment_method'   => 'required|in:Cash,Bank Transfer,GCash,Maya,Credit Card,Other',
+            'payment_method'   => 'nullable|in:Cash,Bank Transfer,GCash,Maya,Credit Card,Other',
             'reference_number' => 'nullable|string',
             'items'            => 'required|array|min:1',
             'items.*.job_order' => 'required|string|max:255',
@@ -305,7 +305,7 @@ class TaskController extends Controller
                     ->orWhere('contact_number', 'like', "%{$query}%");
             })
             ->with('assignedTo')
-            ->latest()
+            ->orderBy('due_date', 'asc')
             ->paginate(15);
 
         return view('tasks.index', compact('tasks', 'query'));
@@ -323,11 +323,19 @@ class TaskController extends Controller
             $query->where('priority', $request->priority);
         }
 
+        if ($request->due_date_from) {
+            $query->whereDate('due_date', '>=', $request->due_date_from);
+        }
+
+        if ($request->due_date_to) {
+            $query->whereDate('due_date', '<=', $request->due_date_to);
+        }
+
         if (Auth::user()->isAdmin() && $request->assigned_to) {
             $query->where('assigned_to', $request->assigned_to);
         }
 
-        $tasks = $query->with('assignedTo')->latest()->paginate(15);
+        $tasks = $query->with('assignedTo')->orderBy('due_date', 'asc')->paginate(15);
 
         return view('tasks.index', compact('tasks'));
     }

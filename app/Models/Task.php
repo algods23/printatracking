@@ -149,7 +149,15 @@ class Task extends Model
 
         static::creating(function ($model) {
             if (!$model->task_id) {
-                $model->task_id = 'TASK-' . date('Ymd') . '-' . str_pad(static::count() + 1, 5, '0', STR_PAD_LEFT);
+                $lastTask = static::where('task_id', 'like', 'P-%')
+                    ->orderByRaw("CAST(SUBSTRING(task_id, 3) AS UNSIGNED) DESC")
+                    ->first();
+
+                $nextNumber = $lastTask
+                    ? (int) substr($lastTask->task_id, 2) + 1
+                    : 1;
+
+                $model->task_id = 'P-' . str_pad($nextNumber, 2, '0', STR_PAD_LEFT);
             }
         });
     }

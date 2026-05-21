@@ -5,41 +5,45 @@
 @section('page-subtitle', 'Manage all your printing and signage tasks')
 
 @section('content')
-<div class="mb-6 flex items-center justify-between gap-4">
-    <div class="flex-1">
+<!-- Search & Filter Bar -->
+<div class="mb-6 flex items-end gap-3 flex-wrap">
+    <div class="flex-1 min-w-[200px]">
         <form action="{{ route('tasks.search') }}" method="GET" class="flex gap-2">
-            <input type="text" name="q" value="{{ $query ?? '' }}" placeholder="Search by task ID, customer name, or phone..." class="flex-1 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
-            <button type="submit" class="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors">Search</button>
+            <input type="text" name="q" value="{{ $query ?? '' }}" placeholder="Search by task ID, customer name, or phone..." class="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+            <button type="submit" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors text-sm">Search</button>
         </form>
     </div>
-    <a href="{{ route('tasks.create') }}" class="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors flex items-center gap-2">
-        <i data-lucide="plus" class="w-5 h-5"></i>
+    <select onchange="filterTasks()" id="statusFilter" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+        <option value="">All Status</option>
+        <option value="Pending">Pending</option>
+        <option value="Designing">Designing</option>
+        <option value="Printing">Printing</option>
+        <option value="Installing">Installing</option>
+        <option value="Completed">Completed</option>
+        <option value="Cancelled">Cancelled</option>
+    </select>
+    <select onchange="filterTasks()" id="priorityFilter" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+        <option value="">All Priority</option>
+        <option value="Low">Low</option>
+        <option value="Medium">Medium</option>
+        <option value="High">High</option>
+        <option value="Urgent">Urgent</option>
+    </select>
+    <div>
+        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Due From</label>
+        <input type="date" id="dueDateFrom" onchange="filterTasks()" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+    </div>
+    <div>
+        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Due To</label>
+        <input type="date" id="dueDateTo" onchange="filterTasks()" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+    </div>
+    <button onclick="clearFilters()" class="px-3 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors text-sm">
+        Clear
+    </button>
+    <a href="{{ route('tasks.create') }}" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors flex items-center gap-2 text-sm">
+        <i data-lucide="plus" class="w-4 h-4"></i>
         New Task
     </a>
-</div>
-
-<!-- Filter Bar -->
-<div class="mb-6 flex gap-3 flex-wrap">
-    <div>
-        <select onchange="filterTasks()" id="statusFilter" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
-            <option value="">All Status</option>
-            <option value="Pending">Pending</option>
-            <option value="Designing">Designing</option>
-            <option value="Printing">Printing</option>
-            <option value="Installing">Installing</option>
-            <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
-        </select>
-    </div>
-    <div>
-        <select onchange="filterTasks()" id="priorityFilter" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
-            <option value="">All Priority</option>
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
-            <option value="Urgent">Urgent</option>
-        </select>
-    </div>
 </div>
 
 <!-- Tasks Table -->
@@ -169,13 +173,30 @@
     function filterTasks() {
         const status = document.getElementById('statusFilter').value;
         const priority = document.getElementById('priorityFilter').value;
+        const dueDateFrom = document.getElementById('dueDateFrom').value;
+        const dueDateTo = document.getElementById('dueDateTo').value;
         
         let url = '{{ route('tasks.filter') }}?';
         if (status) url += 'status=' + status + '&';
         if (priority) url += 'priority=' + priority + '&';
+        if (dueDateFrom) url += 'due_date_from=' + dueDateFrom + '&';
+        if (dueDateTo) url += 'due_date_to=' + dueDateTo + '&';
         
         window.location.href = url;
     }
+
+    function clearFilters() {
+        window.location.href = '{{ route('tasks.index') }}';
+    }
+
+    // Restore filter values from URL params
+    (function() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('status')) document.getElementById('statusFilter').value = params.get('status');
+        if (params.get('priority')) document.getElementById('priorityFilter').value = params.get('priority');
+        if (params.get('due_date_from')) document.getElementById('dueDateFrom').value = params.get('due_date_from');
+        if (params.get('due_date_to')) document.getElementById('dueDateTo').value = params.get('due_date_to');
+    })();
 
     lucide.createIcons();
 </script>

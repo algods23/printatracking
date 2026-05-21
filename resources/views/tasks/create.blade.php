@@ -162,8 +162,8 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Payment Method -->
                 <div>
-                    <label for="payment_method" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Payment Method *</label>
-                    <select id="payment_method" name="payment_method" required
+                    <label for="payment_method" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Payment Method (optional)</label>
+                    <select id="payment_method" name="payment_method"
                         class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('payment_method') border-red-500 @enderror"
                         onchange="toggleReference(this.value)">
                         <option value="">Select method</option>

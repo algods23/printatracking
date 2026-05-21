@@ -100,8 +100,7 @@
                         <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Amount</p>
                         <p class="text-lg font-semibold text-gray-900 dark:text-white">&#8369;{{ number_format($task->amount, 2) }}</p>
                     </div>
-                
-                    
+
                     <div>
                         <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">To Be Picked Up</p>
                         <p class="text-lg font-semibold text-gray-900 dark:text-white">
