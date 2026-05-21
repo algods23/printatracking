@@ -80,9 +80,51 @@
         </form>
     </div>
 
+    <!-- Change Password -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Change Password</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Update the password for your account ({{ auth()->user()->email }})</p>
+        </div>
 
+        <form action="{{ route('settings.password') }}" method="POST" class="p-6 space-y-5">
+            @csrf
 
+            <div>
+                <label for="current_password" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Current password</label>
+                <input type="password" id="current_password" name="current_password" required autocomplete="current-password"
+                    class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-gray-900 dark:text-white @error('current_password') border-red-500 @enderror">
+                @error('current_password')
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
+            </div>
 
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">New password</label>
+                    <input type="password" id="password" name="password" required autocomplete="new-password" minlength="8"
+                        class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-gray-900 dark:text-white @error('password') border-red-500 @enderror">
+                    @error('password')
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">At least 8 characters</p>
+                </div>
+
+                <div>
+                    <label for="password_confirmation" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Confirm new password</label>
+                    <input type="password" id="password_confirmation" name="password_confirmation" required autocomplete="new-password" minlength="8"
+                        class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-gray-900 dark:text-white">
+                </div>
+            </div>
+
+            <div class="flex gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button type="submit" class="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors flex items-center gap-2">
+                    <i data-lucide="key-round" class="w-5 h-5"></i>
+                    Update Password
+                </button>
+            </div>
+        </form>
+    </div>
 
     <!-- Backup & Restore -->
     @if(auth()->user()->isAdmin())
@@ -101,15 +143,19 @@
                     </button>
                 </form>
 
-                <form action="{{ route('settings.restore') }}" method="POST" enctype="multipart/form-data" class="flex gap-4">
+                <form action="{{ route('settings.restore') }}" method="POST" enctype="multipart/form-data" id="restoreForm" class="flex gap-4">
                     @csrf
-                    <input type="file" name="backup_file" accept=".zip,.sql" class="flex-1" style="display: none" id="backupFile">
+                    <input type="file" name="backup_file" accept=".sqlite,.db" class="hidden" id="backupFile" onchange="if(this.files.length) this.form.submit()">
                     <button type="button" onclick="document.getElementById('backupFile').click()" class="flex-1 px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
                         <i data-lucide="upload" class="w-5 h-5"></i>
                         Restore Database
                     </button>
                 </form>
             </div>
+
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+                <strong>Backup</strong> downloads a <code class="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">.sqlite</code> file to your computer and also keeps a copy in <code class="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">storage/app/backups/</code> on the server.
+            </p>
 
             <div class="bg-yellow-500/10 border border-yellow-500 rounded-lg p-4">
                 <p class="text-sm text-yellow-700 dark:text-yellow-400">

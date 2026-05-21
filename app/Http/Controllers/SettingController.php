@@ -81,6 +81,35 @@ class SettingController extends Controller
         return back()->with('success', 'Receipt settings updated successfully');
     }
 
+    public function updatePassword(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'current_password' => 'required|string',
+            'password'         => 'required|string|min:8|confirmed',
+        ]);
+
+        if (! Hash::check($validated['current_password'], $user->password)) {
+            return back()
+                ->withErrors(['current_password' => 'The current password is incorrect.'])
+                ->withInput($request->except('current_password', 'password', 'password_confirmation'));
+        }
+
+        $user->update([
+            'password' => $validated['password'],
+        ]);
+
+        ActivityLog::create([
+            'user_id'    => $user->id,
+            'action'     => 'changed_password',
+            'description' => 'Password updated',
+            'ip_address' => $request->ip(),
+        ]);
+
+        return back()->with('success', 'Password updated successfully');
+    }
+
     public function updatePrinter(Request $request)
     {
         $validated = $request->validate([
@@ -198,17 +227,93 @@ class SettingController extends Controller
 
     public function backup()
     {
-        // Backup implementation
-        return back()->with('success', 'Database backup completed');
+        if (config('database.default') !== 'sqlite') {
+            return back()->with('error', 'Backup download is only supported for SQLite databases.');
+        }
+
+        $path = $this->sqliteDatabasePath();
+
+        if (! is_file($path)) {
+            return back()->with('error', 'Database file not found.');
+        }
+
+        $filename = 'printatracking-backup-' . now()->format('Y-m-d-His') . '.sqlite';
+        $backupDir = storage_path('app/backups');
+
+        if (! is_dir($backupDir)) {
+            mkdir($backupDir, 0755, true);
+        }
+
+        copy($path, $backupDir . DIRECTORY_SEPARATOR . $filename);
+
+        ActivityLog::create([
+            'user_id'     => Auth::id(),
+            'action'      => 'database_backup',
+            'description' => "Database backup downloaded ({$filename})",
+            'ip_address'  => request()->ip(),
+        ]);
+
+        return response()->download($path, $filename, [
+            'Content-Type' => 'application/x-sqlite3',
+        ]);
     }
 
     public function restore(Request $request)
     {
+        if (config('database.default') !== 'sqlite') {
+            return back()->with('error', 'Restore is only supported for SQLite databases.');
+        }
+
         $request->validate([
-            'backup_file' => 'required|file',
+            'backup_file' => ['required', 'file', 'max:51200'],
         ]);
 
-        // Restore implementation
-        return back()->with('success', 'Database restored successfully');
+        $uploaded = $request->file('backup_file');
+        $extension = strtolower($uploaded->getClientOriginalExtension());
+
+        if (! in_array($extension, ['sqlite', 'db'], true)) {
+            return back()->with('error', 'Please upload a valid SQLite backup file (.sqlite).');
+        }
+
+        $targetPath = $this->sqliteDatabasePath();
+        $targetDir = dirname($targetPath);
+
+        if (! is_dir($targetDir)) {
+            mkdir($targetDir, 0755, true);
+        }
+
+        if (is_file($targetPath)) {
+            $safetyDir = storage_path('app/backups');
+            if (! is_dir($safetyDir)) {
+                mkdir($safetyDir, 0755, true);
+            }
+            copy($targetPath, $safetyDir . DIRECTORY_SEPARATOR . 'pre-restore-' . now()->format('Y-m-d-His') . '.sqlite');
+        }
+
+        $uploaded->move($targetDir, basename($targetPath));
+
+        ActivityLog::create([
+            'user_id'     => Auth::id(),
+            'action'      => 'database_restore',
+            'description' => 'Database restored from uploaded backup',
+            'ip_address'  => $request->ip(),
+        ]);
+
+        return back()->with('success', 'Database restored successfully. You may need to refresh the page.');
+    }
+
+    private function sqliteDatabasePath(): string
+    {
+        $database = config('database.connections.sqlite.database');
+
+        if ($database === ':memory:') {
+            throw new \RuntimeException('Cannot manage an in-memory SQLite database.');
+        }
+
+        if (! str_starts_with($database, DIRECTORY_SEPARATOR) && ! preg_match('/^[A-Za-z]:[\\\\\\/]/', $database)) {
+            $database = base_path($database);
+        }
+
+        return $database;
     }
 }

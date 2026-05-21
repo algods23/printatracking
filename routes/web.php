@@ -46,6 +46,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     Route::post('/settings/company', [SettingController::class, 'updateCompany'])->name('settings.company');
     Route::post('/settings/receipt', [SettingController::class, 'updateReceipt'])->name('settings.receipt');
+    Route::post('/settings/password', [SettingController::class, 'updatePassword'])->name('settings.password');
     Route::post('/settings/printer', [SettingController::class, 'updatePrinter'])->name('settings.printer');
     Route::post('/settings/theme', [SettingController::class, 'updateTheme'])->name('settings.theme');
 
