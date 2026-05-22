@@ -1,0 +1,14 @@
+{
+  "$schema": "https://www.schemastore.org/package.json",
+  "private": true,
+  "type": "module",
+  "name": "printa-signages",
+  "version": "1.0.0",
+  "description": "Professional Signages & Stickers Management System",
+  "main": "electron/main.cjs",
+  "homepage": "",
+  "dependencies": {
+    "chart.js": "^4.4.0",
+    "lucide": "latest"
+  }
+}

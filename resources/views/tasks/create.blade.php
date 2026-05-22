@@ -78,8 +78,6 @@
                     <select id="priority" name="priority" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('priority') border-red-500 @enderror">
                         <option value="">Select priority</option>
                         <option value="Low" {{ old('priority') == 'Low' ? 'selected' : '' }}>Low</option>
-                        <option value="Medium" {{ old('priority') == 'Medium' ? 'selected' : '' }}>Medium</option>
-                        <option value="High" {{ old('priority') == 'High' ? 'selected' : '' }}>High</option>
                         <option value="Urgent" {{ old('priority') == 'Urgent' ? 'selected' : '' }}>Urgent</option>
                     </select>
                     @error('priority')

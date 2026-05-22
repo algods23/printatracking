@@ -6,17 +6,7 @@
 
 @section('content')
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <!-- Total Tasks Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-gray-600 dark:text-gray-400 font-semibold">Total Tasks</h3>
-            <div class="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                <i data-lucide="check-square" class="w-6 h-6 text-blue-500"></i>
-            </div>
-        </div>
-        <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ $totalTasks }}</p>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">All tasks in system</p>
-    </div>
+   
 
     <!-- Pending Tasks Card -->
     <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
@@ -30,28 +20,40 @@
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Awaiting processing</p>
     </div>
 
-    <!-- Received Tasks Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-gray-600 dark:text-gray-400 font-semibold">Received</h3>
-            <div class="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                <i data-lucide="package-check" class="w-6 h-6 text-blue-500"></i>
-            </div>
-        </div>
-        <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ $receivedTasks }}</p>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Orders received by customers</p>
-    </div>
 
     <!-- Completed Tasks Card -->
     <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-gray-600 dark:text-gray-400 font-semibold">Completed</h3>
-            <div class="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
-                <i data-lucide="check-circle" class="w-6 h-6 text-green-500"></i>
+            <div class="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                <i data-lucide="check-circle" class="w-6 h-6 text-blue-500"></i>
             </div>
         </div>
         <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ $completedTasks }}</p>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Finished jobs</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Finished Orders</p>
+    </div>
+    
+        <!-- Received Tasks Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-gray-600 dark:text-gray-400 font-semibold">Received</h3>
+                <div class="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
+                    <i data-lucide="package-check" class="w-6 h-6 text-green-500"></i>
+                </div>
+            </div>
+            <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ $receivedTasks }}</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Orders received by customers</p>
+        </div>
+     <!-- Total Tasks Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-gray-600 dark:text-gray-400 font-semibold">Total </h3>
+            <div class="w-10 h-10 bg-black-500/10 rounded-lg flex items-center justify-center">
+                <i data-lucide="check-square" class="w-6 h-6 text-black-500"></i>
+            </div>
+        </div>
+        <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ $totalTasks }}</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">All tasks in system</p>
     </div>
 </div>
 

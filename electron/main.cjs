@@ -292,7 +292,7 @@ async function startWebServer() {
     `0.0.0.0:${HTTP_PORT}`,
     '-t',
     'public',
-    'public/index.php',
+    'public/desktop-router.php',
   ], {
     cwd: runtimePaths.laravelApp,
     windowsHide: true,

@@ -62,17 +62,6 @@
                 <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 rounded-lg transition-colors mb-4">
                     Sign In
                 </button>
-
-                <!-- Demo Credentials -->
-                <div class="p-4 bg-gray-700 rounded-lg text-sm">
-                    <p class="text-gray-300 mb-2"><span class="font-semibold">Demo Admin:</span></p>
-                    <p class="text-gray-400 mb-3">Email: <code class="bg-gray-800 px-2 py-1 rounded">admin@printa.local</code></p>
-                    <p class="text-gray-400 mb-3">Password: <code class="bg-gray-800 px-2 py-1 rounded">password</code></p>
-                    <hr class="border-gray-600 my-3">
-                    <p class="text-gray-300 mb-2"><span class="font-semibold">Demo Staff:</span></p>
-                    <p class="text-gray-400 mb-3">Email: <code class="bg-gray-800 px-2 py-1 rounded">staff@printa.local</code></p>
-                    <p class="text-gray-400">Password: <code class="bg-gray-800 px-2 py-1 rounded">password</code></p>
-                </div>
             </form>
 
             <!-- Footer -->

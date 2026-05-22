@@ -26,8 +26,6 @@
     <select onchange="filterTasks()" id="priorityFilter" name="priority" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
         <option value="">All Priority</option>
         <option value="Low">Low</option>
-        <option value="Medium">Medium</option>
-        <option value="High">High</option>
         <option value="Urgent">Urgent</option>
     </select>
     <div>
