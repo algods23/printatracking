@@ -7,6 +7,7 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\PcvController;
+use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingController;
 
@@ -62,6 +63,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings/users/{user}/edit', [SettingController::class, 'editUser'])->name('settings.edit-user');
         Route::put('/settings/users/{user}', [SettingController::class, 'updateUser'])->name('settings.update-user');
         Route::delete('/settings/users/{user}', [SettingController::class, 'deleteUser'])->name('settings.delete-user');
+
+        // Quotation
+        Route::get('/quotation', [QuotationController::class, 'index'])->name('quotation.index');
+        Route::get('/quotation/download', [QuotationController::class, 'download'])->name('quotation.download');
         
         Route::post('/settings/backup', [SettingController::class, 'backup'])->name('settings.backup');
         Route::post('/settings/restore', [SettingController::class, 'restore'])->name('settings.restore');

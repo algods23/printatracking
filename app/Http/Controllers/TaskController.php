@@ -371,13 +371,19 @@ class TaskController extends Controller
         $showArchived = $request->boolean('archived');
 
         if ($showArchived) {
-            $query->where('status', 'Received')
-                ->where('payment_status', 'Paid');
+            $query->where(function ($q) {
+                $q->where('status', 'Cancelled')
+                    ->orWhere(function ($q) {
+                        $q->where('status', 'Received')
+                            ->where('payment_status', 'Paid');
+                    });
+            });
         } else {
             $query->where(function ($q) {
                 $q->where('status', '!=', 'Received')
                     ->orWhere('payment_status', '!=', 'Paid');
             });
+            $query->where('status', '!=', 'Cancelled');
         }
 
         if ($request->filled('q')) {

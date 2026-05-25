@@ -1,10 +1,21 @@
 @extends('layouts.app')
 
-@section('title', 'Tasks')
-@section('page-title', 'Transactions')
-@section('page-subtitle', 'Manage all your printing and signage tasks')
+@php($isArchived = request()->boolean('archived'))
+
+@section('title', $isArchived ? 'Archived' : 'Tasks')
+@section('page-title', $isArchived ? 'Archived' : 'Transactions')
+@section('page-subtitle', $isArchived ? 'Archived cancelled and fully paid transactions' : 'Manage all your printing and signage tasks')
 
 @section('content')
+@if($isArchived)
+<div class="mb-4 flex justify-start">
+    <a href="{{ route('tasks.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-sm">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        Back to Transactions
+    </a>
+</div>
+@endif
+
 <!-- Search & Filter Bar -->
 <form id="taskFiltersForm" action="{{ route('tasks.index') }}" method="GET" class="mb-6 flex items-end gap-3 flex-wrap">
     <div class="flex-1 min-w-[200px]">
@@ -15,8 +26,6 @@
     </div>
     <select onchange="filterTasks()" id="statusFilter" name="status" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
         <option value="">All Status</option>
-        <option value="Pending">Pending</option>
-        <option value="Completed">Completed</option>
         <option value="Received">Received</option>
         <option value="Cancelled">Cancelled</option>
     </select>
@@ -38,13 +47,15 @@
     <button type="button" onclick="clearFilters()" class="px-3 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors text-sm">
         Clear
     </button>
-    <button type="button" onclick="showArchived()" class="px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg transition-colors text-sm">
-        Archived
-    </button>
-    <a href="{{ route('tasks.create') }}" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors flex items-center gap-2 text-sm">
-        <i data-lucide="plus" class="w-4 h-4"></i>
-        New Task
-    </a>
+    @unless($isArchived)
+        <button type="button" onclick="showArchived()" class="px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg transition-colors text-sm">
+            Archived
+        </button>
+        <a href="{{ route('tasks.create') }}" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors flex items-center gap-2 text-sm">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            New Task
+        </a>
+    @endunless
 </form>
 
 <!-- Tasks Table -->

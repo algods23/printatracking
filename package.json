@@ -3,7 +3,7 @@
     "private": true,
     "type": "module",
     "name": "printa-signages",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Professional Signages & Stickers Management System",
     "main": "electron/main.cjs",
     "homepage": "",
