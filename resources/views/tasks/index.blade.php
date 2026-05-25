@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Tasks')
-@section('page-title', 'Tasks Management')
+@section('page-title', 'Transactions')
 @section('page-subtitle', 'Manage all your printing and signage tasks')
 
 @section('content')
@@ -16,9 +16,6 @@
     <select onchange="filterTasks()" id="statusFilter" name="status" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
         <option value="">All Status</option>
         <option value="Pending">Pending</option>
-        <option value="Designing">Designing</option>
-        <option value="Printing">Printing</option>
-        <option value="Installing">Installing</option>
         <option value="Completed">Completed</option>
         <option value="Received">Received</option>
         <option value="Cancelled">Cancelled</option>
@@ -51,35 +48,30 @@
         <table class="w-full">
             <thead>
                 <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Task ID</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Created Date</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Status</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Job Order #</th>
+                    
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Customer</th>
                     @if(auth()->user()->isAdmin())
-                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Assigned To</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Staff Assigned</th>
                     @endif
-                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Status</th>
+                    
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Priority</th>
-                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Amount</th>
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Due Date</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Amount</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Payment Status</th>
+                    
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($tasks as $task)
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                        <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                            <a href="{{ route('tasks.show', $task) }}" class="text-yellow-500 hover:text-yellow-600">{{ $task->task_id }}</a>
-                        </td>
                         <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                            <div>{{ $task->customer_name }}</div>
-                            <div class="text-xs text-gray-500">{{ $task->contact_number }}</div>
+                            {{ $task->created_at->format('M d, Y') }}
                         </td>
-                        
-                        @if(auth()->user()->isAdmin())
-                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                            {{ $task->assignedTo?->name ?? 'Unassigned' }}
-                        </td>
-                        @endif
-                        <td class="px-6 py-4 text-sm">
+                         <td class="px-6 py-4 text-sm">
                             @switch($task->status)
                                 @case('Pending')
                                     <span class="inline-block px-3 py-1 bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-full text-xs font-medium">Pending</span>
@@ -104,6 +96,21 @@
                                 @break
                             @endswitch
                         </td>
+                        <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+                            <a href="{{ route('tasks.show', $task) }}" class="text-yellow-500 hover:text-yellow-600">{{ $task->task_id }}</a>
+                        </td>
+                        
+                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                            <div>{{ $task->customer_name }}</div>
+                            <div class="text-xs text-gray-500">{{ $task->contact_number }}</div>
+                        </td>
+                        
+                        @if(auth()->user()->isAdmin())
+                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                            {{ $task->assignedTo?->name ?? 'Unassigned' }}
+                        </td>
+                        @endif
+                       
                         <td class="px-6 py-4 text-sm">
                             @switch($task->priority)
                                 @case('Low')
@@ -120,35 +127,56 @@
                                 @break
                             @endswitch
                         </td>
+                          <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                            {{ $task->due_date->format('M d, Y') }}
+                        </td>
                         <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
                             ₱{{ number_format($task->amount, 2) }}
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                            {{ $task->due_date->format('M d, Y') }}
+                      
+                        <td class="px-6 py-4 text-sm">
+                            @switch($task->payment_status)
+                                @case('Unpaid')
+                                    <span class="inline-block px-3 py-1 bg-red-500/10 text-red-600 dark:text-red-400 rounded-full text-xs font-medium">Unpaid</span>
+                                @break
+                                @case('Partial')
+                                    <span class="inline-block px-3 py-1 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 rounded-full text-xs font-medium">Partial</span>
+                                @break
+                                @case('Paid')
+                                    <span class="inline-block px-3 py-1 bg-green-500/10 text-green-600 dark:text-green-400 rounded-full text-xs font-medium">Paid</span>
+                                @break
+                                @default
+                                    <span class="inline-block px-3 py-1 bg-gray-500/10 text-gray-600 dark:text-gray-400 rounded-full text-xs font-medium">{{ $task->payment_status ?? 'N/A' }}</span>
+                            @endswitch
                         </td>
+
                         <td class="px-6 py-4 text-sm">
                             <div class="flex items-center gap-2">
-                                <a href="{{ route('tasks.show', $task) }}" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 rounded transition-colors">
-                                    <i data-lucide="eye" class="w-4 h-4"></i>
-                                </a>
-                                @if($task->status !== 'Received')
-                                <a href="{{ route('tasks.edit', $task) }}" class="p-2 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/10 rounded transition-colors">
-                                    <i data-lucide="edit" class="w-4 h-4"></i>
-                                </a>
-                                <form action="{{ route('tasks.destroy', $task) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="p-2 text-red-600 dark:text-red-400 hover:bg-red-500/10 rounded transition-colors">
+                                @if($task->status === 'Cancelled')
+                                    <a href="{{ route('tasks.show', $task) }}" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 rounded transition-colors" title="View cancellation reason">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </a>
+                                @else
+                                    <a href="{{ route('tasks.show', $task) }}" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 rounded transition-colors">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </a>
+                                    @if($task->status !== 'Received')
+                                    <a href="{{ route('tasks.edit', $task) }}" class="p-2 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/10 rounded transition-colors">
+                                        <i data-lucide="edit" class="w-4 h-4"></i>
+                                    </a>
+                                    @if(auth()->user()->isAdmin())
+                                    <button type="button" onclick="openCancelModal({{ $task->id }})" class="p-2 text-red-600 dark:text-red-400 hover:bg-red-500/10 rounded transition-colors">
                                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                                     </button>
-                                </form>
+                                    @endif
+                                    @endif
                                 @endif
                             </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ auth()->user()->isAdmin() ? 9 : 8 }}" class="px-6 py-12 text-center">
+                        <td colspan="{{ auth()->user()->isAdmin() ? 11 : 10 }}" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <i data-lucide="inbox" class="w-12 h-12 text-gray-400"></i>
                                 <p class="text-gray-500 dark:text-gray-400">No tasks found</p>
@@ -167,6 +195,29 @@
     {{ $tasks->links() }}
 </div>
 
+<!-- Cancel Task Modal -->
+<div id="cancelModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 max-w-md w-full mx-4 shadow-lg">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Cancel Task</h3>
+        <form id="cancelForm" method="POST" class="space-y-4">
+            @csrf
+            @method('DELETE')
+            <div>
+                <label for="cancellation_reason" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Cancellation Reason (Optional)</label>
+                <textarea id="cancellation_reason" name="cancellation_reason" rows="4" placeholder="Enter the reason for cancelling this task..." class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
+            </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeCancelModal()" class="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" class="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors">
+                    Confirm Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @endsection
 
 @section('scripts')
@@ -177,6 +228,19 @@
 
     function clearFilters() {
         window.location.href = '{{ route('tasks.index') }}';
+    }
+
+    function openCancelModal(taskId) {
+        const modal = document.getElementById('cancelModal');
+        const form = document.getElementById('cancelForm');
+        form.action = `/tasks/${taskId}`;
+        modal.classList.remove('hidden');
+    }
+
+    function closeCancelModal() {
+        const modal = document.getElementById('cancelModal');
+        modal.classList.add('hidden');
+        document.getElementById('cancellation_reason').value = '';
     }
 
     // Restore filter values from URL params

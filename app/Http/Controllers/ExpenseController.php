@@ -14,7 +14,20 @@ class ExpenseController extends Controller
     public function index()
     {
         $expenses = Expense::with('recordedBy')->latest()->paginate(15);
-        return view('expenses.index', compact('expenses'));
+        
+        // Calculate monthly totals
+        $currentMonth = Carbon::now()->startOfMonth();
+        $currentMonthEnd = Carbon::now()->endOfMonth();
+        
+        $thisMonthTotal = Expense::whereBetween('date', [$currentMonth, $currentMonthEnd])->sum('amount');
+        $materialsTotal = Expense::whereBetween('date', [$currentMonth, $currentMonthEnd])
+            ->where('category', 'Materials')
+            ->sum('amount');
+        $otherTotal = Expense::whereBetween('date', [$currentMonth, $currentMonthEnd])
+            ->where('category', '!=', 'Materials')
+            ->sum('amount');
+        
+        return view('expenses.index', compact('expenses', 'thisMonthTotal', 'materialsTotal', 'otherTotal'));
     }
 
     public function create()

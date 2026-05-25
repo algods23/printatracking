@@ -40,7 +40,7 @@
                                     <span class="inline-block px-3 py-1 bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-full text-sm">Pending</span>
                                 @break
                                 @case('Designing')
-                                    <span class="inline-block px-3 py-1 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-full text-sm">Designing</span>
+                                    <span class="inline-block px-3 py-1 bg-Cyan-500/10 text-Cyan-600 dark:text-Cyan-400 rounded-full text-sm">Designing</span>
                                 @break
                                 @case('Printing')
                                     <span class="inline-block px-3 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-sm">Printing</span>
@@ -144,6 +144,13 @@
                     <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                         <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Notes</p>
                         <p class="text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{{ $task->notes }}</p>
+                    </div>
+                @endif
+
+                @if($task->status === 'Cancelled' && $task->cancellation_reason)
+                    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Cancellation Reason</p>
+                        <p class="text-red-600 dark:text-red-400 whitespace-pre-wrap">{{ $task->cancellation_reason }}</p>
                     </div>
                 @endif
             </div>
@@ -267,43 +274,53 @@
                 </form>
                 @endif
 
-                @if($task->payment_status !== 'Paid')
-                <a href="{{ route('receipts.create', ['task_id' => $task->id]) }}" class="block w-full px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors text-center flex items-center justify-center gap-2">
-                    <i data-lucide="receipt" class="w-5 h-5"></i>
-                    Make a payment
-                </a>
-                @elseif($task->status === 'Completed')
+                @if($task->status === 'Completed' && $task->status !== 'Received')
                 <form id="receiveTaskForm" action="{{ route('tasks.receive', $task) }}" method="POST">
                     @csrf
-                    <button type="button" onclick="openReceiveModal()" class="block w-full px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors text-center flex items-center justify-center gap-2">
+                    <button type="button" onclick="openReceiveModal()" class="block w-full px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-lg transition-colors text-center flex items-center justify-center gap-2">
+                        <i data-lucide="package-check" class="w-5 h-5"></i>
+                        Received by Customer
+                    </button>
+                </form>
+                @elseif($task->status === 'Received' && $task->payment_status !== 'Paid')
+                <form id="receiveTaskForm" action="{{ route('tasks.receive', $task) }}" method="POST">
+                    @csrf
+                    <button type="button" onclick="openReceiveModal()" class="block w-full px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-lg transition-colors text-center flex items-center justify-center gap-2">
                         <i data-lucide="package-check" class="w-5 h-5"></i>
                         Received by Customer
                     </button>
                 </form>
                 @elseif($task->status === 'Received')
-                <button type="button" disabled class="block w-full px-4 py-2 bg-green-500 text-white font-semibold rounded-lg text-center flex items-center justify-center gap-2 cursor-default">
-                    <i data-lucide="package-check" class="w-5 h-5"></i>
-                    Received by Customer
-                </button>
-                @else
+                <button type="button" disabled class="block w-full px-4 py-2 bg-purple-500 text-white font-semibold rounded-lg text-center flex items-center justify-center gap-2 cursor-default">
+                        <i data-lucide="package-check" class="w-5 h-5"></i>
+                        Received by Customer
+                    </button>
+                @elseif($task->status !== 'Received' && $task->status !== 'Completed')
                 <button type="button" disabled class="block w-full px-4 py-2 bg-gray-500/40 text-white/80 font-semibold rounded-lg text-center flex items-center justify-center gap-2 cursor-not-allowed">
                     <i data-lucide="clock" class="w-5 h-5"></i>
                     Waiting for Completion
                 </button>
                 @endif
+                @endif
 
+                @if($task->payment_status !== 'Paid')
+                <a href="{{ route('receipts.create', ['task_id' => $task->id]) }}" class="block w-full px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors text-center flex items-center justify-center gap-2">
+                    <i data-lucide="receipt" class="w-5 h-5"></i>
+                    Make a payment
+                </a>
+                @endif
+
+                @if(!($task->status === 'Received' && $task->payment_status === 'Paid'))
                 <a href="{{ route('tasks.edit', $task) }}" class="block w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors text-center flex items-center justify-center gap-2">
                     <i data-lucide="edit" class="w-5 h-5"></i>
                     Edit Task
                 </a>
-                <form action="{{ route('tasks.destroy', $task) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this task?')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="block w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors text-center flex items-center justify-center gap-2">
-                        <i data-lucide="trash-2" class="w-5 h-5"></i>
-                        Delete Task
-                    </button>
-                </form>
+                @endif
+                @if(auth()->user()->isAdmin())
+                <button type="button" onclick="openCancelModal()" class="block w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors text-center flex items-center justify-center gap-2">
+                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    Cancel Task
+                </button>
                 @endif
             </div>
         </div>
@@ -392,7 +409,7 @@
     </div>
 </div>
 
-@if($task->payment_status === 'Paid' && $task->status === 'Completed')
+@if($task->status === 'Completed' && $task->status !== 'Received' || ($task->status === 'Received' && $task->payment_status !== 'Paid'))
 <div id="receiveModal" class="fixed inset-0 z-50 hidden items-center justify-center px-4 py-6">
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeReceiveModal()"></div>
     <div class="relative w-full max-w-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden">
@@ -426,6 +443,29 @@
 </div>
 @endif
 
+<!-- Cancel Task Modal -->
+<div id="cancelModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 max-w-md w-full mx-4 shadow-lg">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Cancel Task</h3>
+        <form id="cancelForm" action="{{ route('tasks.destroy', $task) }}" method="POST" class="space-y-4">
+            @csrf
+            @method('DELETE')
+            <div>
+                <label for="cancellation_reason" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Cancellation Reason (Optional)</label>
+                <textarea id="cancellation_reason" name="cancellation_reason" rows="4" placeholder="Enter the reason for cancelling this task..." class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
+            </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeCancelModal()" class="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" class="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors">
+                    Confirm Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @endsection
 
 @section('scripts')
@@ -455,9 +495,25 @@
         if (form) form.submit();
     }
 
+    function openCancelModal() {
+        const modal = document.getElementById('cancelModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+        }
+    }
+
+    function closeCancelModal() {
+        const modal = document.getElementById('cancelModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            document.getElementById('cancellation_reason').value = '';
+        }
+    }
+
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
             closeReceiveModal();
+            closeCancelModal();
         }
     });
 </script>

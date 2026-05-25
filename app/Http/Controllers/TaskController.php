@@ -18,7 +18,7 @@ class TaskController extends Controller
     {
         $query = $this->filteredTasksQuery($request);
         $tasks = $query->with('assignedTo')
-            ->orderBy('due_date', 'asc')
+            ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->withQueryString();
 
@@ -38,14 +38,14 @@ class TaskController extends Controller
     {
         $validated = $request->validate([
             'customer_name'    => 'required|string|max:255',
-            'contact_number'   => 'required|string|max:20',
+            'contact_number'   => 'nullable|string|max:20',
             'product_type'     => 'nullable|in:Signage,Sticker,Banner,Label,Other',
             'signage_type'     => 'nullable|in:Digital,Vinyl,Neon,LED,Wooden,Metal,Other',
             'sticker_type'     => 'nullable|in:Vinyl,Paper,Label,Die-cut,Other',
             'assigned_to'      => 'nullable|exists:users,id',
-            'due_date'         => 'required|date|after_or_equal:today',
+            'due_date'         => 'nullable|date|after_or_equal:today',
             'due_time'         => 'nullable|date_format:H:i',
-            'priority'         => 'required|in:Low,Medium,High,Urgent',
+            'priority'         => 'nullable|in:Low,Medium,High,Urgent',
             'notes'            => 'nullable|string',
             'payment_amount'   => 'nullable|numeric|min:0',
             'payment_method'   => 'nullable|in:Cash,Bank Transfer,GCash,Maya,Credit Card,Other',
@@ -206,12 +206,12 @@ class TaskController extends Controller
 
         $validated = $request->validate([
             'customer_name'     => 'required|string|max:255',
-            'contact_number'    => 'required|string|max:20',
+            'contact_number'    => 'nullable|string|max:20',
             'assigned_to'       => 'nullable|exists:users,id',
-            'due_date'          => 'required|date',
+            'due_date'          => 'nullable|date',
             'due_time'          => 'nullable|date_format:H:i',
             'status'            => 'required|in:Pending,Designing,Printing,Installing,Completed,Received,Cancelled',
-            'priority'          => 'required|in:Low,Medium,High,Urgent',
+            'priority'          => 'nullable|in:Low,Medium,High,Urgent',
             'notes'             => 'nullable|string',
             'items'             => 'required|array|min:1',
             'items.*.job_order' => 'required|string|max:255',
@@ -301,10 +301,6 @@ class TaskController extends Controller
     {
         $this->authorizeTaskAccess($task);
 
-        if ($task->payment_status !== 'Paid') {
-            return redirect()->route('tasks.show', $task)->with('error', 'Task must be fully paid before it can be marked as received.');
-        }
-
         if ($task->status !== 'Completed' && $task->status !== 'Received') {
             return redirect()->route('tasks.show', $task)->with('error', 'Task must be completed before it can be marked as received.');
         }
@@ -325,31 +321,38 @@ class TaskController extends Controller
         return redirect()->route('tasks.show', $task)->with('success', 'Task marked as received by customer.');
     }
 
-    public function destroy(Task $task)
+    public function destroy(Request $request, Task $task)
     {
         $this->authorizeTaskAccess($task);
 
-        if ($task->image_path) {
-            Storage::disk('public')->delete($task->image_path);
+        // Only admins can cancel tasks
+        if (!Auth::user()->isAdmin()) {
+            abort(403, 'Only administrators can cancel tasks.');
         }
-        if (!empty($task->attachments)) {
-            foreach ($task->attachments as $attachment) {
-                Storage::disk('public')->delete($attachment);
-            }
-        }
+
+        $validated = $request->validate([
+            'cancellation_reason' => 'nullable|string|max:500',
+        ]);
+
+        // Delete all receipts for this task to reset paid amount to 0
+        Receipt::where('task_id', $task->id)->delete();
+
+        $task->update([
+            'status' => 'Cancelled',
+            'payment_status' => 'Unpaid',
+            'cancellation_reason' => $validated['cancellation_reason'] ?? null,
+        ]);
 
         ActivityLog::create([
             'user_id'     => Auth::id(),
-            'action'      => 'deleted',
+            'action'      => 'cancelled',
             'model_type'  => Task::class,
             'model_id'    => $task->id,
-            'description' => "Task {$task->task_id} deleted",
+            'description' => "Task {$task->task_id} cancelled. Reason: " . ($validated['cancellation_reason'] ?? 'No reason provided'),
             'ip_address'  => request()->ip(),
         ]);
 
-        $task->delete();
-
-        return redirect()->route('tasks.index')->with('success', 'Task deleted successfully');
+        return redirect()->route('tasks.index')->with('success', 'Task cancelled successfully');
     }
 
     public function search(Request $request)

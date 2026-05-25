@@ -15,11 +15,6 @@
         : [['job_order' => '', 'quantity' => 1, 'price' => '']];
     $orderItems = old('items', $defaultItems);
     $paidFromReceipts = (float) $task->receipts->sum('cash_received');
-    $dueTimeDefault = '';
-    if ($task->due_time) {
-        $dueTimeDefault = strlen((string) $task->due_time) >= 5 ? substr((string) $task->due_time, 0, 5) : (string) $task->due_time;
-    }
-    $dueTimeValue = old('due_time', $dueTimeDefault);
 @endphp
 
 <div class="max-w-5xl mx-auto">
@@ -37,6 +32,14 @@
             @csrf
             @method('PUT')
 
+            <!-- Walk-in Checkbox -->
+            <div class="mb-6">
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" id="walkin_checkbox" name="is_walkin" {{ $task->customer_name === 'walk-in' ? 'checked' : '' }} class="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-yellow-500 focus:ring-2 focus:ring-yellow-500">
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">Walk-in Customer</span>
+                </label>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-6 gap-6">
                 <div class="md:col-span-2">
                     <label for="customer_name" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Customer Name *</label>
@@ -47,8 +50,8 @@
                 </div>
 
                 <div class="md:col-span-2">
-                    <label for="contact_number" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Contact Number *</label>
-                    <input type="text" id="contact_number" name="contact_number" value="{{ old('contact_number', $task->contact_number) }}" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('contact_number') border-red-500 @enderror" />
+                    <label for="contact_number" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Contact Number</label>
+                    <input type="text" id="contact_number" name="contact_number" value="{{ old('contact_number', $task->contact_number) }}" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('contact_number') border-red-500 @enderror" />
                     @error('contact_number')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
@@ -79,25 +82,18 @@
                 </div>
 
                 <div class="md:col-span-2">
-                    <label for="due_date" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Due Date *</label>
+                    <label for="due_date" class="block text-sm font-medium text-gray-900 dark:text-white mb-2"><span class="duedate-required">Due Date *</span></label>
                     <input type="date" id="due_date" name="due_date" value="{{ old('due_date', $task->due_date?->format('Y-m-d')) }}" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('due_date') border-red-500 @enderror" />
                     @error('due_date')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <div class="md:col-span-2">
-                    <label for="due_time" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Due Time</label>
-                    <input type="time" id="due_time" name="due_time" value="{{ $dueTimeValue }}" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('due_time') border-red-500 @enderror" />
-                    @error('due_time')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
 
                 <div class="md:col-span-2">
-                    <label for="priority" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Priority *</label>
+                    <label for="priority" class="block text-sm font-medium text-gray-900 dark:text-white mb-2"><span class="priority-required">Priority *</span></label>
                     <select id="priority" name="priority" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('priority') border-red-500 @enderror">
-                        @foreach(['Low', 'Medium', 'High', 'Urgent'] as $p)
+                        @foreach(['Low','Urgent'] as $p)
                             <option value="{{ $p }}" {{ old('priority', $task->priority) == $p ? 'selected' : '' }}>{{ $p }}</option>
                         @endforeach
                     </select>
@@ -398,6 +394,54 @@
 
     document.querySelectorAll('.order-row').forEach(attachOrderListeners);
     recalculateOrders();
+    
+    // Handle walk-in checkbox
+    const walkinCheckbox = document.getElementById('walkin_checkbox');
+    const customerNameInput = document.getElementById('customer_name');
+    const contactNumberInput = document.getElementById('contact_number');
+    const assignedToSelect = document.getElementById('assigned_to');
+    const dueDateInput = document.getElementById('due_date');
+    const prioritySelect = document.getElementById('priority');
+
+    function toggleWalkinFields() {
+        const isWalkin = walkinCheckbox.checked;
+
+        if (isWalkin) {
+            // Set walk-in customer name and remove required
+            customerNameInput.value = 'walk-in';
+            customerNameInput.removeAttribute('required');
+
+            // Make other fields optional
+            contactNumberInput.removeAttribute('required');
+            if (assignedToSelect) {
+                assignedToSelect.removeAttribute('required');
+            }
+            dueDateInput.removeAttribute('required');
+            prioritySelect.removeAttribute('required');
+
+            // Update label indicators
+            document.querySelector('.duedate-required').textContent = 'Due Date';
+            document.querySelector('.priority-required').textContent = 'Priority';
+        } else {
+            // Clear customer name and make it required
+            customerNameInput.value = '';
+            customerNameInput.setAttribute('required', 'required');
+
+            // Revert other fields to required
+            dueDateInput.setAttribute('required', 'required');
+            prioritySelect.setAttribute('required', 'required');
+
+            // Update label indicators
+            document.querySelector('.duedate-required').textContent = 'Due Date *';
+            document.querySelector('.priority-required').textContent = 'Priority *';
+        }
+    }
+
+    walkinCheckbox.addEventListener('change', toggleWalkinFields);
+
+    // Initialize on page load
+    toggleWalkinFields();
+    
     lucide.createIcons();
 </script>
 @endsection

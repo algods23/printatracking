@@ -61,7 +61,7 @@
                 <!-- Login Button -->
                 <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 rounded-lg transition-colors mb-4">
                     Sign In
-                </button>
+                </button>   
             </form>
 
             <!-- Footer -->

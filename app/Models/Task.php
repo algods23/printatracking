@@ -21,6 +21,7 @@ class Task extends Model
         'status',
         'priority',
         'notes',
+        'cancellation_reason',
         'amount',
         'payment_status',
         'payment_amount',

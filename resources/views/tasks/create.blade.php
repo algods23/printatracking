@@ -20,6 +20,14 @@
         <form action="{{ route('tasks.store') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-6">
             @csrf
 
+            <!-- Walk-in Checkbox -->
+            <div class="mb-6">
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" id="walkin_checkbox" name="is_walkin" {{ old('is_walkin') ? 'checked' : '' }} class="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-yellow-500 focus:ring-2 focus:ring-yellow-500">
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">Walk-in Customer</span>
+                </label>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-6 gap-6">
                 <!-- Customer Name -->
                 <div class="md:col-span-2">
@@ -32,8 +40,8 @@
 
                 <!-- Contact Number -->
                 <div class="md:col-span-2">
-                    <label for="contact_number" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Contact Number *</label>
-                    <input type="text" id="contact_number" name="contact_number" value="{{ old('contact_number') }}" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('contact_number') border-red-500 @enderror" />
+                    <label for="contact_number" class="block text-sm font-medium text-gray-900 dark:text-white mb-2"><span class="contact-required">Contact Number</span></label>
+                    <input type="text" id="contact_number" name="contact_number" value="{{ old('contact_number') }}" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('contact_number') border-red-500 @enderror" />
                     @error('contact_number')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
@@ -42,7 +50,7 @@
                 @if(auth()->user()->isAdmin())
                 <!-- Assign To -->
                 <div class="md:col-span-2">
-                    <label for="assigned_to" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Assign To</label>
+                    <label for="assigned_to" class="block text-sm font-medium text-gray-900 dark:text-white mb-2"><span class="assignto-required">Assign To</span></label>
                     <select id="assigned_to" name="assigned_to" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
                         <option value="">Select staff</option>
                         @foreach($staff as $member)
@@ -54,8 +62,8 @@
 
                 <!-- Due Date -->
                 <div class="md:col-span-2">
-                    <label for="due_date" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Due Date *</label>
-                    <input type="date" id="due_date" name="due_date" value="{{ old('due_date') }}" required
+                    <label for="due_date" class="block text-sm font-medium text-gray-900 dark:text-white mb-2"><span class="duedate-required">Due Date *</span></label>
+                    <input type="date" id="due_date" name="due_date" value="{{ old('due_date', date('Y-m-d')) }}" required
                         min="{{ date('Y-m-d') }}"
                         class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('due_date') border-red-500 @enderror" />
                     @error('due_date')
@@ -63,18 +71,10 @@
                     @enderror
                 </div>
 
-                <!-- Due Time -->
-                <div class="md:col-span-2">
-                    <label for="due_time" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Due Time *</label>
-                    <input type="time" id="due_time" name="due_time" value="{{ old('due_time') }}" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('due_time') border-red-500 @enderror" />
-                    @error('due_time')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
 
                 <!-- Priority -->
                 <div class="md:col-span-2">
-                    <label for="priority" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Priority *</label>
+                    <label for="priority" class="block text-sm font-medium text-gray-900 dark:text-white mb-2"><span class="priority-required">Priority *</span></label>
                     <select id="priority" name="priority" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('priority') border-red-500 @enderror">
                         <option value="">Select priority</option>
                         <option value="Low" {{ old('priority') == 'Low' ? 'selected' : '' }}>Low</option>
@@ -166,10 +166,11 @@
                         onchange="toggleReference(this.value)">
                         <option value="">Select method</option>
                         <option value="Cash"          {{ old('payment_method') == 'Cash'          ? 'selected' : '' }}>Cash</option>
+                        <option value="Card"          {{ old('payment_method') == 'Card'          ? 'selected' : '' }}>Card</option>
+                        <option value="Check"         {{ old('payment_method') == 'Check'         ? 'selected' : '' }}>Check</option>
                         <option value="Bank Transfer" {{ old('payment_method') == 'Bank Transfer' ? 'selected' : '' }}>Bank Transfer</option>
                         <option value="GCash"         {{ old('payment_method') == 'GCash'         ? 'selected' : '' }}>GCash</option>
                         <option value="Maya"          {{ old('payment_method') == 'Maya'          ? 'selected' : '' }}>Maya</option>
-                        <option value="Credit Card"   {{ old('payment_method') == 'Credit Card'   ? 'selected' : '' }}>Credit Card</option>
                         <option value="Other"         {{ old('payment_method') == 'Other'         ? 'selected' : '' }}>Other</option>
                     </select>
                     @error('payment_method')
@@ -246,6 +247,63 @@
         </form>
     </div>
 </div>
+
+<script>
+    // Handle walk-in checkbox
+    const walkinCheckbox = document.getElementById('walkin_checkbox');
+    const customerNameInput = document.getElementById('customer_name');
+    const contactNumberInput = document.getElementById('contact_number');
+    const assignedToSelect = document.getElementById('assigned_to');
+    const dueDateInput = document.getElementById('due_date');
+    const prioritySelect = document.getElementById('priority');
+
+    function toggleWalkinFields() {
+        const isWalkin = walkinCheckbox.checked;
+
+        if (isWalkin) {
+            // Set walk-in customer name and remove required
+            customerNameInput.value = 'walk-in';
+            customerNameInput.removeAttribute('required');
+
+            // Make other fields optional
+            contactNumberInput.removeAttribute('required');
+            if (assignedToSelect) {
+                assignedToSelect.removeAttribute('required');
+            }
+            dueDateInput.removeAttribute('required');
+            prioritySelect.removeAttribute('required');
+
+            // Update label indicators
+            document.querySelector('.contact-required').textContent = 'Contact Number';
+            if (assignedToSelect) {
+                document.querySelector('.assignto-required').textContent = 'Assign To';
+            }
+            document.querySelector('.duedate-required').textContent = 'Due Date';
+            document.querySelector('.priority-required').textContent = 'Priority';
+        } else {
+            // Clear customer name and make it required
+            customerNameInput.value = '';
+            customerNameInput.setAttribute('required', 'required');
+
+            // Revert other fields to required (if applicable)
+            dueDateInput.setAttribute('required', 'required');
+            prioritySelect.setAttribute('required', 'required');
+
+            // Update label indicators
+            document.querySelector('.contact-required').textContent = 'Contact Number';
+            if (assignedToSelect) {
+                document.querySelector('.assignto-required').textContent = 'Assign To';
+            }
+            document.querySelector('.duedate-required').textContent = 'Due Date *';
+            document.querySelector('.priority-required').textContent = 'Priority *';
+        }
+    }
+
+    walkinCheckbox.addEventListener('change', toggleWalkinFields);
+
+    // Initialize on page load
+    toggleWalkinFields();
+</script>
 
 @endsection
 

@@ -108,7 +108,7 @@
                 <div>
                     <label for="payment_method" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Payment Method</label>
                     <select id="payment_method" name="payment_method" x-model="paymentMethod" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                        @foreach(['Cash', 'Card', 'Check', 'Bank Transfer', 'Other'] as $method)
+                        @foreach(['Cash', 'Card', 'Check', 'Bank Transfer', 'GCash', 'Maya', 'Other'] as $method)
                             <option value="{{ $method }}" @selected(old('payment_method', 'Cash') === $method)>{{ $method }}</option>
                         @endforeach
                     </select>
