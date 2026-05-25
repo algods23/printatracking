@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\PcvController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingController;
 
@@ -37,6 +38,9 @@ Route::middleware('auth')->group(function () {
     // Expenses
     Route::resource('expenses', ExpenseController::class);
     Route::get('/expenses/report', [ExpenseController::class, 'report'])->name('expenses.report');
+
+    // PCV
+    Route::resource('pcv', PcvController::class);
 
     // Reports
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');

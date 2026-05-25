@@ -31,6 +31,12 @@
                 <span>Expenses</span>
             </a>
 
+            <!-- PCV -->
+            <a href="{{ route('pcv.index') }}" class="nav-link {{ request()->routeIs('pcv.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors {{ request()->routeIs('pcv.*') ? 'bg-yellow-500 text-black' : '' }}">
+                <i data-lucide="wallet" class="w-5 h-5"></i>
+                <span>PCV</span>
+            </a>
+
             <!-- Reports -->
             <a href="{{ route('reports.index') }}" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors {{ request()->routeIs('reports.*') ? 'bg-yellow-500 text-black' : '' }}">
                 <i data-lucide="bar-chart-3" class="w-5 h-5"></i>

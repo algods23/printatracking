@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use Carbon\Carbon;
+use App\Models\Pcv;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -17,6 +18,7 @@ class ReportExcelExporter
     private const SHEET_TITLES = [
         'sales'          => 'Sales Report',
         'expenses'       => 'Expense Report',
+        'pcv'            => 'PCV Report',
         'tasks'          => 'Task Report',
         'productivity'   => 'Productivity',
         'monthly'        => 'Monthly Summary',
@@ -72,6 +74,7 @@ class ReportExcelExporter
         return match ($type) {
             'sales'          => $this->salesRows($data),
             'expenses'       => $this->expenseRows($data),
+            'pcv'            => $this->pcvRows($data),
             'tasks'          => $this->taskRows($data),
             'productivity'   => $this->productivityRows($data),
             'monthly'        => $this->monthlyRows($data),
@@ -214,21 +217,49 @@ class ReportExcelExporter
                 $row['label'],
                 (float) $row['sales'],
                 (float) $row['expenses'],
-                (float) $row['profit'],
+                (float) $row['pcv'],
+                (float) $row['total'],
             ];
         }
 
         return [
-            'headers'      => ['Month', 'Sales', 'Expenses', 'Profit'],
+            'headers'      => ['Month', 'Sales', 'Expenses', 'PCV', 'Total'],
             'body'         => $body,
-            'moneyColumns' => [2, 3, 4],
+            'moneyColumns' => [2, 3, 4, 5],
             'dateColumns'  => [],
             'totalRow'     => [
                 'TOTAL',
                 (float) $data['totalSales'],
                 (float) $data['totalExpenses'],
+                (float) $data['totalPcv'],
                 (float) $data['netProfit'],
             ],
+        ];
+    }
+
+    private function pcvRows(array $data): array
+    {
+        $body = [];
+        $totalAmount = 0.0;
+
+        foreach ($data['pcvs'] as $pcv) {
+            $amount = (float) $pcv->amount;
+            $totalAmount += $amount;
+            $body[] = [
+                $pcv->pcv_name,
+                $pcv->category === 'Other' && $pcv->other_category ? $pcv->other_category : $pcv->category,
+                $amount,
+                $this->excelDate($pcv->date),
+                $pcv->recordedBy?->name ?? '—',
+            ];
+        }
+
+        return [
+            'headers'      => ['Name', 'Category', 'Amount', 'Date', 'Recorded by'],
+            'body'         => $body,
+            'moneyColumns' => [3],
+            'dateColumns'  => [4],
+            'totalRow'     => ['', 'TOTAL', $totalAmount, '', ''],
         ];
     }
 

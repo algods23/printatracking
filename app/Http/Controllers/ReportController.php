@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Task;
 use App\Models\Receipt;
 use App\Models\Expense;
+use App\Models\Pcv;
 use Illuminate\Http\Request;
 use App\Exports\ReportExcelExporter;
 use Carbon\Carbon;
@@ -15,6 +16,7 @@ class ReportController extends Controller
     private const REPORT_TYPES = [
         'sales'          => 'Sales report',
         'expenses'       => 'Expense report',
+        'pcv'            => 'PCV report',
         'tasks'          => 'Task report',
         'productivity'   => 'Productivity',
         'monthly'        => 'Monthly summary',
@@ -25,6 +27,7 @@ class ReportController extends Controller
     private const REPORT_TYPE_META = [
         'sales'          => ['icon' => 'line-chart', 'wide' => false],
         'expenses'       => ['icon' => 'receipt', 'wide' => false],
+        'pcv'            => ['icon' => 'wallet', 'wide' => false],
         'tasks'          => ['icon' => 'check-square', 'wide' => false],
         'productivity'   => ['icon' => 'zap', 'wide' => false],
         'monthly'        => ['icon' => 'calendar-clock', 'wide' => false],
@@ -41,6 +44,7 @@ class ReportController extends Controller
             unset($allTypes['monthly']);
             unset($allTypes['productivity']);
             unset($allTypes['expenses']);
+            unset($allTypes['pcv']);
         }
 
         return $allTypes;
@@ -128,6 +132,7 @@ class ReportController extends Controller
         return match ($type) {
             'sales'          => $this->salesData($startDate, $endDate),
             'expenses'       => $this->expenseData($startDate, $endDate),
+            'pcv'            => $this->pcvData($startDate, $endDate),
             'tasks'          => $this->taskData($startDate, $endDate),
             'productivity'   => $this->productivityData($startDate, $endDate),
             'monthly'        => $this->monthlyData($startDate, $endDate),
@@ -168,6 +173,23 @@ class ReportController extends Controller
             'expenses'          => $expenses,
             'totalExpenses'     => $expenses->sum('amount'),
             'categoryBreakdown' => $expenses->groupBy('category')->map(fn ($g) => $g->sum('amount')),
+        ];
+    }
+
+    private function pcvData(string $startDate, string $endDate): array
+    {
+        $pcvs = Pcv::whereDate('date', '>=', $startDate)
+            ->whereDate('date', '<=', $endDate)
+            ->with('recordedBy')
+            ->orderByDesc('date')
+            ->get();
+
+        return [
+            'type'           => 'pcv',
+            'pcvs'           => $pcvs,
+            'totalPcv'       => $pcvs->sum('amount'),
+            'categoryBreakdown' => $pcvs->groupBy(fn ($pcv) => $pcv->category === 'Other' && $pcv->other_category ? $pcv->other_category : $pcv->category)
+                ->map(fn ($g) => $g->sum('amount')),
         ];
     }
 
@@ -225,6 +247,7 @@ class ReportController extends Controller
         $rows = [];
         $totalSales = 0;
         $totalExpenses = 0;
+        $totalPcv = 0;
 
         while ($cursor <= $rangeEnd) {
             $from = $cursor->copy()->startOfMonth()->max($rangeStart);
@@ -232,18 +255,25 @@ class ReportController extends Controller
 
             $sales = (float) Receipt::whereBetween('created_at', [$from, $to])->sum('cash_received');
 
-            $expenses = (float) Expense::whereBetween('date', [$from->toDateString(), $to->toDateString()])
+            $expenses = (float) Expense::whereDate('date', '>=', $from->toDateString())
+                ->whereDate('date', '<=', $to->toDateString())
+                ->sum('amount');
+
+            $pcv = (float) Pcv::whereDate('date', '>=', $from->toDateString())
+                ->whereDate('date', '<=', $to->toDateString())
                 ->sum('amount');
 
             $rows[] = [
                 'label'    => $cursor->format('F Y'),
                 'sales'    => $sales,
                 'expenses' => $expenses,
-                'profit'   => $sales - $expenses,
+                'pcv'      => $pcv,
+                'total'    => $sales - $expenses - $pcv,
             ];
 
             $totalSales += $sales;
             $totalExpenses += $expenses;
+            $totalPcv += $pcv;
             $cursor->addMonth();
         }
 
@@ -252,7 +282,8 @@ class ReportController extends Controller
             'monthlyRows'   => $rows,
             'totalSales'    => $totalSales,
             'totalExpenses' => $totalExpenses,
-            'netProfit'     => $totalSales - $totalExpenses,
+            'totalPcv'      => $totalPcv,
+            'netProfit'     => $totalSales - $totalExpenses - $totalPcv,
         ];
     }
 
@@ -299,7 +330,9 @@ class ReportController extends Controller
             $to = $cursor->copy()->endOfDay();
 
             $sales = (float) Receipt::whereBetween('created_at', [$from, $to])->sum('cash_received');
-            $expenses = (float) Expense::whereBetween('date', [$from->toDateString(), $to->toDateString()])->sum('amount');
+            $expenses = (float) Expense::whereDate('date', '>=', $from->toDateString())
+                ->whereDate('date', '<=', $to->toDateString())
+                ->sum('amount');
 
             if ($sales > 0 || $expenses > 0) {
                 $rows[] = [
