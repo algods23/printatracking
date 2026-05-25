@@ -43,6 +43,14 @@
                     @enderror
                 </div>
 
+                <div id="otherCategoryWrapper" class="{{ old('category') === 'Other' ? '' : 'hidden' }}">
+                    <label for="other_category" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Other Category *</label>
+                    <input type="text" id="other_category" name="other_category" value="{{ old('other_category') }}" placeholder="Specify category type" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('other_category') border-red-500 @enderror">
+                    @error('other_category')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <!-- Amount -->
                 <div>
                     <label for="amount" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Amount (₱) *</label>
@@ -86,6 +94,14 @@
                 @enderror
             </div>
 
+            <div>
+                <label for="receipt_number" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Receipt Number</label>
+                <input type="text" id="receipt_number" name="receipt_number" value="{{ old('receipt_number') }}" placeholder="Enter receipt or invoice number" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('receipt_number') border-red-500 @enderror">
+                @error('receipt_number')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
             <!-- Buttons -->
             <div class="flex gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button type="submit" class="flex-1 px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
@@ -112,6 +128,23 @@
             fileName.textContent = '✓ File selected: ' + file.name;
         }
     }
+
+    function toggleOtherCategory() {
+        const category = document.getElementById('category').value;
+        const wrapper = document.getElementById('otherCategoryWrapper');
+        const input = document.getElementById('other_category');
+
+        if (category === 'Other') {
+            wrapper.classList.remove('hidden');
+            input.required = true;
+        } else {
+            wrapper.classList.add('hidden');
+            input.required = false;
+        }
+    }
+
+    document.getElementById('category').addEventListener('change', toggleOtherCategory);
+    toggleOtherCategory();
 
     lucide.createIcons();
 </script>

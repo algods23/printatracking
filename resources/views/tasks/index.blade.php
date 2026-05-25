@@ -25,6 +25,8 @@
         <option value="Low">Low</option>
         <option value="Urgent">Urgent</option>
     </select>
+    <input type="hidden" id="archivedFilter" name="archived" value="{{ request()->boolean('archived') ? '1' : '' }}">
+    <input type="hidden" id="paymentStatusFilter" name="payment_status" value="{{ request('payment_status') }}">
     <div>
         <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Due From</label>
         <input type="date" id="dueDateFrom" name="due_date_from" onchange="filterTasks()" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
@@ -35,6 +37,9 @@
     </div>
     <button type="button" onclick="clearFilters()" class="px-3 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors text-sm">
         Clear
+    </button>
+    <button type="button" onclick="showArchived()" class="px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg transition-colors text-sm">
+        Archived
     </button>
     <a href="{{ route('tasks.create') }}" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors flex items-center gap-2 text-sm">
         <i data-lucide="plus" class="w-4 h-4"></i>
@@ -230,6 +235,13 @@
         window.location.href = '{{ route('tasks.index') }}';
     }
 
+    function showArchived() {
+        document.getElementById('archivedFilter').value = '1';
+        document.getElementById('statusFilter').value = 'Received';
+        document.getElementById('paymentStatusFilter').value = 'Paid';
+        document.getElementById('taskFiltersForm').submit();
+    }
+
     function openCancelModal(taskId) {
         const modal = document.getElementById('cancelModal');
         const form = document.getElementById('cancelForm');
@@ -248,6 +260,8 @@
         const params = new URLSearchParams(window.location.search);
         if (params.get('status')) document.getElementById('statusFilter').value = params.get('status');
         if (params.get('priority')) document.getElementById('priorityFilter').value = params.get('priority');
+        if (params.get('archived') === '1') document.getElementById('archivedFilter').value = '1';
+        if (params.get('payment_status')) document.getElementById('paymentStatusFilter').value = params.get('payment_status');
         if (params.get('due_date_from')) document.getElementById('dueDateFrom').value = params.get('due_date_from');
         if (params.get('due_date_to')) document.getElementById('dueDateTo').value = params.get('due_date_to');
     })();

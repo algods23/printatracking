@@ -19,8 +19,20 @@
 </div>
 
 <!-- Expense Summary Cards -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <!-- Today Expenses -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="text-gray-600 dark:text-gray-400 font-semibold text-sm">Today Expenses</h3>
+            <div class="w-8 h-8 bg-red-500/10 rounded-lg flex items-center justify-center">
+                <i data-lucide="calendar" class="w-5 h-5 text-red-500"></i>
+            </div>
+        </div>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white">₱{{ number_format($todayTotal, 2) }}</p>
+    </div>
+
     <!-- Total Expenses -->
+    @if(auth()->user()->isAdmin())
     <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
         <div class="flex items-center justify-between mb-2">
             <h3 class="text-gray-600 dark:text-gray-400 font-semibold text-sm">This Month</h3>
@@ -30,28 +42,10 @@
         </div>
         <p class="text-2xl font-bold text-gray-900 dark:text-white">₱{{ number_format($thisMonthTotal, 2) }}</p>
     </div>
+    @endif
 
-    <!-- Materials -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-        <div class="flex items-center justify-between mb-2">
-            <h3 class="text-gray-600 dark:text-gray-400 font-semibold text-sm">Materials</h3>
-            <div class="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                <i data-lucide="package" class="w-5 h-5 text-blue-500"></i>
-            </div>
-        </div>
-        <p class="text-2xl font-bold text-gray-900 dark:text-white">₱{{ number_format($materialsTotal, 2) }}</p>
-    </div>
 
-    <!-- Other Expenses -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-        <div class="flex items-center justify-between mb-2">
-            <h3 class="text-gray-600 dark:text-gray-400 font-semibold text-sm">Other</h3>
-            <div class="w-8 h-8 bg-orange-500/10 rounded-lg flex items-center justify-center">
-                <i data-lucide="more-horizontal" class="w-5 h-5 text-orange-500"></i>
-            </div>
-        </div>
-        <p class="text-2xl font-bold text-gray-900 dark:text-white">₱{{ number_format($otherTotal, 2) }}</p>
-    </div>
+
 </div>
 
 <!-- Expenses Table -->
@@ -86,6 +80,7 @@
                                 <a href="{{ route('expenses.edit', $expense) }}" class="p-2 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/10 rounded transition-colors">
                                     <i data-lucide="edit" class="w-4 h-4"></i>
                                 </a>
+                                @if(auth()->user()->isAdmin())
                                 <form action="{{ route('expenses.destroy', $expense) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure?')">
                                     @csrf
                                     @method('DELETE')
@@ -93,6 +88,7 @@
                                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                                     </button>
                                 </form>
+                                @endif
                             </div>
                         </td>
                     </tr>

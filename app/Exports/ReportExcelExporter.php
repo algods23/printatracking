@@ -15,11 +15,13 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class ReportExcelExporter
 {
     private const SHEET_TITLES = [
-        'sales'        => 'Sales Report',
-        'expenses'     => 'Expense Report',
-        'tasks'        => 'Task Report',
-        'productivity' => 'Productivity',
-        'monthly'      => 'Monthly Summary',
+        'sales'          => 'Sales Report',
+        'expenses'       => 'Expense Report',
+        'tasks'          => 'Task Report',
+        'productivity'   => 'Productivity',
+        'monthly'        => 'Monthly Summary',
+        'daily_expenses' => 'Daily Expenses',
+        'daily_report'   => 'Daily Report',
     ];
 
     public function download(string $type, array $data, string $startDate, string $endDate): StreamedResponse
@@ -68,12 +70,14 @@ class ReportExcelExporter
     private function rowsForType(string $type, array $data): array
     {
         return match ($type) {
-            'sales'        => $this->salesRows($data),
-            'expenses'     => $this->expenseRows($data),
-            'tasks'        => $this->taskRows($data),
-            'productivity' => $this->productivityRows($data),
-            'monthly'      => $this->monthlyRows($data),
-            default        => throw new \InvalidArgumentException("Unknown report type: {$type}"),
+            'sales'          => $this->salesRows($data),
+            'expenses'       => $this->expenseRows($data),
+            'tasks'          => $this->taskRows($data),
+            'productivity'   => $this->productivityRows($data),
+            'monthly'        => $this->monthlyRows($data),
+            'daily_expenses' => $this->dailyExpensesRows($data),
+            'daily_report'   => $this->dailyReportRows($data),
+            default          => throw new \InvalidArgumentException("Unknown report type: {$type}"),
         };
     }
 
@@ -380,6 +384,57 @@ class ReportExcelExporter
 
         $sheet->freezePane('A2');
         $sheet->setSelectedCell('A2');
+    }
+
+    private function dailyExpensesRows(array $data): array
+    {
+        $body = [];
+        $totalAmount = 0.0;
+
+        foreach ($data['dailySummary'] as $day) {
+            $amount = (float) $day['total'];
+            $totalAmount += $amount;
+            $body[] = [
+                $this->excelDate($day['date']),
+                $amount,
+                $day['count'],
+            ];
+        }
+
+        return [
+            'headers'      => ['Date', 'Total Expenses', 'Number of Entries'],
+            'body'         => $body,
+            'moneyColumns' => [2],
+            'dateColumns'  => [1],
+            'totalRow'     => ['TOTAL', $totalAmount, ''],
+        ];
+    }
+
+    private function dailyReportRows(array $data): array
+    {
+        $body = [];
+
+        foreach ($data['dailyRows'] as $row) {
+            $body[] = [
+                $this->excelDate($row['date']),
+                (float) $row['sales'],
+                (float) $row['expenses'],
+                (float) $row['profit'],
+            ];
+        }
+
+        return [
+            'headers'      => ['Date', 'Sales', 'Expenses', 'Profit'],
+            'body'         => $body,
+            'moneyColumns' => [2, 3, 4],
+            'dateColumns'  => [1],
+            'totalRow'     => [
+                'TOTAL',
+                (float) $data['totalSales'],
+                (float) $data['totalExpenses'],
+                (float) $data['netProfit'],
+            ],
+        ];
     }
 
     private function excelDate(Carbon|\DateTimeInterface|string $value): float

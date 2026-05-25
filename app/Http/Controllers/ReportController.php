@@ -13,20 +13,38 @@ use Illuminate\Validation\Rule;
 class ReportController extends Controller
 {
     private const REPORT_TYPES = [
-        'sales'        => 'Sales report',
-        'expenses'     => 'Expense report',
-        'tasks'        => 'Task report',
-        'productivity' => 'Productivity',
-        'monthly'      => 'Monthly summary',
+        'sales'          => 'Sales report',
+        'expenses'       => 'Expense report',
+        'tasks'          => 'Task report',
+        'productivity'   => 'Productivity',
+        'monthly'        => 'Monthly summary',
+        'daily_expenses' => 'Daily expenses',
+        'daily_report'   => 'Daily report',
     ];
 
     private const REPORT_TYPE_META = [
-        'sales'        => ['icon' => 'line-chart', 'wide' => false],
-        'expenses'     => ['icon' => 'receipt', 'wide' => false],
-        'tasks'        => ['icon' => 'check-square', 'wide' => false],
-        'productivity' => ['icon' => 'zap', 'wide' => false],
-        'monthly'      => ['icon' => 'calendar-clock', 'wide' => false],
+        'sales'          => ['icon' => 'line-chart', 'wide' => false],
+        'expenses'       => ['icon' => 'receipt', 'wide' => false],
+        'tasks'          => ['icon' => 'check-square', 'wide' => false],
+        'productivity'   => ['icon' => 'zap', 'wide' => false],
+        'monthly'        => ['icon' => 'calendar-clock', 'wide' => false],
+        'daily_expenses' => ['icon' => 'calendar', 'wide' => false],
+        'daily_report'   => ['icon' => 'calendar-days', 'wide' => false],
     ];
+
+    private function getAvailableReportTypes(): array
+    {
+        $allTypes = self::REPORT_TYPES;
+
+        if (auth()->check() && !auth()->user()->isAdmin()) {
+            unset($allTypes['tasks']);
+            unset($allTypes['monthly']);
+            unset($allTypes['productivity']);
+            unset($allTypes['expenses']);
+        }
+
+        return $allTypes;
+    }
 
     public function index(Request $request)
     {
@@ -35,11 +53,12 @@ class ReportController extends Controller
         $selectedTypes = $request->input('types', []);
 
         $reports = [];
+        $availableTypes = $this->getAvailableReportTypes();
 
         if ($request->boolean('generate')) {
             $validated = $request->validate([
                 'types'        => ['required', 'array', 'min:1'],
-                'types.*'      => [Rule::in(array_keys(self::REPORT_TYPES))],
+                'types.*'      => [Rule::in(array_keys($availableTypes))],
                 'start_date'   => 'required|date',
                 'end_date'     => 'required|date|after_or_equal:start_date',
             ]);
@@ -54,7 +73,7 @@ class ReportController extends Controller
         }
 
         return view('reports.index', [
-            'reportTypes'    => self::REPORT_TYPES,
+            'reportTypes'    => $availableTypes,
             'reportTypeMeta' => self::REPORT_TYPE_META,
             'startDate'      => $startDate,
             'endDate'        => $endDate,
@@ -70,10 +89,12 @@ class ReportController extends Controller
             'end_date'   => 'required|date|after_or_equal:start_date',
         ];
 
+        $availableTypes = $this->getAvailableReportTypes();
+
         if ($request->has('types')) {
             $validated = $request->validate(array_merge($baseRules, [
                 'types'   => ['required', 'array', 'min:1'],
-                'types.*' => [Rule::in(array_keys(self::REPORT_TYPES))],
+                'types.*' => [Rule::in(array_keys($availableTypes))],
             ]));
 
             $reportsByType = [];
@@ -89,7 +110,7 @@ class ReportController extends Controller
         }
 
         $validated = $request->validate(array_merge($baseRules, [
-            'type' => ['required', Rule::in(array_keys(self::REPORT_TYPES))],
+            'type' => ['required', Rule::in(array_keys($availableTypes))],
         ]));
 
         $data = $this->buildReportData($validated['type'], $validated['start_date'], $validated['end_date']);
@@ -105,12 +126,14 @@ class ReportController extends Controller
     private function buildReportData(string $type, string $startDate, string $endDate): array
     {
         return match ($type) {
-            'sales'        => $this->salesData($startDate, $endDate),
-            'expenses'     => $this->expenseData($startDate, $endDate),
-            'tasks'        => $this->taskData($startDate, $endDate),
-            'productivity' => $this->productivityData($startDate, $endDate),
-            'monthly'      => $this->monthlyData($startDate, $endDate),
-            default        => [],
+            'sales'          => $this->salesData($startDate, $endDate),
+            'expenses'       => $this->expenseData($startDate, $endDate),
+            'tasks'          => $this->taskData($startDate, $endDate),
+            'productivity'   => $this->productivityData($startDate, $endDate),
+            'monthly'        => $this->monthlyData($startDate, $endDate),
+            'daily_expenses' => $this->dailyExpensesData($startDate, $endDate),
+            'daily_report'   => $this->dailyReportData($startDate, $endDate),
+            default          => [],
         };
     }
 
@@ -227,6 +250,77 @@ class ReportController extends Controller
         return [
             'type'          => 'monthly',
             'monthlyRows'   => $rows,
+            'totalSales'    => $totalSales,
+            'totalExpenses' => $totalExpenses,
+            'netProfit'     => $totalSales - $totalExpenses,
+        ];
+    }
+
+    private function dailyExpensesData(string $startDate, string $endDate): array
+    {
+        $expenses = Expense::whereDate('date', '>=', $startDate)
+            ->whereDate('date', '<=', $endDate)
+            ->with('recordedBy')
+            ->orderByDesc('date')
+            ->get();
+
+        $grouped = $expenses->groupBy(fn ($e) => $e->date->format('Y-m-d'));
+
+        $dailySummary = [];
+        foreach ($grouped as $date => $dayExpenses) {
+            $dailySummary[] = [
+                'date' => Carbon::parse($date),
+                'total' => $dayExpenses->sum('amount'),
+                'count' => $dayExpenses->count(),
+                'items' => $dayExpenses
+            ];
+        }
+
+        return [
+            'type'          => 'daily_expenses',
+            'expenses'      => $expenses,
+            'totalExpenses' => $expenses->sum('amount'),
+            'dailySummary'  => $dailySummary,
+        ];
+    }
+
+    private function dailyReportData(string $startDate, string $endDate): array
+    {
+        $rangeStart = Carbon::parse($startDate)->startOfDay();
+        $rangeEnd = Carbon::parse($endDate)->endOfDay();
+        $cursor = $rangeStart->copy();
+
+        $rows = [];
+        $totalSales = 0.0;
+        $totalExpenses = 0.0;
+
+        while ($cursor <= $rangeEnd) {
+            $from = $cursor->copy()->startOfDay();
+            $to = $cursor->copy()->endOfDay();
+
+            $sales = (float) Receipt::whereBetween('created_at', [$from, $to])->sum('cash_received');
+            $expenses = (float) Expense::whereBetween('date', [$from->toDateString(), $to->toDateString()])->sum('amount');
+
+            if ($sales > 0 || $expenses > 0) {
+                $rows[] = [
+                    'date' => $cursor->copy(),
+                    'sales' => $sales,
+                    'expenses' => $expenses,
+                    'profit' => $sales - $expenses,
+                ];
+            }
+
+            $totalSales += $sales;
+            $totalExpenses += $expenses;
+            $cursor->addDay();
+        }
+
+        // Sort descending by date so most recent is on top
+        usort($rows, fn($a, $b) => $b['date'] <=> $a['date']);
+
+        return [
+            'type'          => 'daily_report',
+            'dailyRows'     => $rows,
             'totalSales'    => $totalSales,
             'totalExpenses' => $totalExpenses,
             'netProfit'     => $totalSales - $totalExpenses,

@@ -49,29 +49,11 @@
                     Select all
                 </button>
             </div>
-            <div class="p-5 space-y-3">
-                {{-- Row 1: Sales, Expense, Task --}}
-                <div class="grid grid-cols-3 gap-3">
-                    @foreach(['sales', 'expenses', 'tasks'] as $value)
+            <div class="p-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    @foreach($reportTypes as $value => $label)
                         @php
-                            $label = $reportTypes[$value];
-                            $meta = $reportTypeMeta[$value];
-                            $checked = in_array($value, $selectedTypes, true);
-                        @endphp
-                        <label class="report-type-card flex items-center gap-2 px-3 py-3 rounded-xl border-2 cursor-pointer transition-colors min-w-0
-                            {{ $checked ? 'border-yellow-500 bg-yellow-500/5' : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500' }}">
-                            <input type="checkbox" name="types[]" value="{{ $value }}" class="report-type-checkbox w-4 h-4 shrink-0 rounded border-gray-400 text-yellow-500 focus:ring-yellow-500" {{ $checked ? 'checked' : '' }}>
-                            <i data-lucide="{{ $meta['icon'] }}" class="w-4 h-4 text-gray-600 dark:text-gray-400 shrink-0"></i>
-                            <span class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $label }}</span>
-                        </label>
-                    @endforeach
-                </div>
-                {{-- Row 2: Productivity, Monthly summary --}}
-                <div class="grid grid-cols-2 gap-3">
-                    @foreach(['productivity', 'monthly'] as $value)
-                        @php
-                            $label = $reportTypes[$value];
-                            $meta = $reportTypeMeta[$value];
+                            $meta = $reportTypeMeta[$value] ?? ['icon' => 'file-text'];
                             $checked = in_array($value, $selectedTypes, true);
                         @endphp
                         <label class="report-type-card flex items-center gap-2 px-3 py-3 rounded-xl border-2 cursor-pointer transition-colors min-w-0

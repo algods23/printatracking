@@ -368,6 +368,17 @@ class TaskController extends Controller
     private function filteredTasksQuery(Request $request)
     {
         $query = $this->visibleTasksQuery();
+        $showArchived = $request->boolean('archived');
+
+        if ($showArchived) {
+            $query->where('status', 'Received')
+                ->where('payment_status', 'Paid');
+        } else {
+            $query->where(function ($q) {
+                $q->where('status', '!=', 'Received')
+                    ->orWhere('payment_status', '!=', 'Paid');
+            });
+        }
 
         if ($request->filled('q')) {
             $search = $request->input('q');
@@ -379,12 +390,16 @@ class TaskController extends Controller
             });
         }
 
-        if ($request->status) {
+        if (! $showArchived && $request->status) {
             $query->where('status', $request->status);
         }
 
         if ($request->priority) {
             $query->where('priority', $request->priority);
+        }
+
+        if (! $showArchived && $request->payment_status) {
+            $query->where('payment_status', $request->payment_status);
         }
 
         if ($request->due_date_from) {

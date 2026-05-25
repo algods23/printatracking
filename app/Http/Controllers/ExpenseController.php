@@ -15,19 +15,22 @@ class ExpenseController extends Controller
     {
         $expenses = Expense::with('recordedBy')->latest()->paginate(15);
         
-        // Calculate monthly totals
+        // Calculate daily and monthly totals
+        $today = Carbon::today();
         $currentMonth = Carbon::now()->startOfMonth();
         $currentMonthEnd = Carbon::now()->endOfMonth();
         
-        $thisMonthTotal = Expense::whereBetween('date', [$currentMonth, $currentMonthEnd])->sum('amount');
-        $materialsTotal = Expense::whereBetween('date', [$currentMonth, $currentMonthEnd])
+        $todayTotal = Expense::whereDate('date', $today)->sum('amount');
+
+        $thisMonthTotal = Expense::whereBetween('date', [$currentMonth->toDateString(), $currentMonthEnd->toDateString()])->sum('amount');
+        $materialsTotal = Expense::whereBetween('date', [$currentMonth->toDateString(), $currentMonthEnd->toDateString()])
             ->where('category', 'Materials')
             ->sum('amount');
-        $otherTotal = Expense::whereBetween('date', [$currentMonth, $currentMonthEnd])
+        $otherTotal = Expense::whereBetween('date', [$currentMonth->toDateString(), $currentMonthEnd->toDateString()])
             ->where('category', '!=', 'Materials')
             ->sum('amount');
         
-        return view('expenses.index', compact('expenses', 'thisMonthTotal', 'materialsTotal', 'otherTotal'));
+        return view('expenses.index', compact('expenses', 'todayTotal', 'thisMonthTotal', 'materialsTotal', 'otherTotal'));
     }
 
     public function create()
@@ -40,11 +43,17 @@ class ExpenseController extends Controller
         $validated = $request->validate([
             'expense_name' => 'required|string|max:255',
             'category' => 'required|in:Materials,Labor,Utilities,Rent,Equipment,Transportation,Marketing,Other',
+            'other_category' => 'required_if:category,Other|nullable|string|max:255',
             'amount' => 'required|numeric|min:0',
             'date' => 'required|date|before_or_equal:today',
             'description' => 'nullable|string',
+            'receipt_number' => 'nullable|string|max:255',
             'receipt' => 'nullable|file|mimes:pdf,jpeg,png,jpg|max:5120',
         ]);
+
+        if ($validated['category'] !== 'Other') {
+            $validated['other_category'] = null;
+        }
 
         if ($request->hasFile('receipt')) {
             $validated['receipt_path'] = $request->file('receipt')->store('expenses', 'public');
@@ -81,11 +90,17 @@ class ExpenseController extends Controller
         $validated = $request->validate([
             'expense_name' => 'required|string|max:255',
             'category' => 'required|in:Materials,Labor,Utilities,Rent,Equipment,Transportation,Marketing,Other',
+            'other_category' => 'required_if:category,Other|nullable|string|max:255',
             'amount' => 'required|numeric|min:0',
             'date' => 'required|date',
             'description' => 'nullable|string',
+            'receipt_number' => 'nullable|string|max:255',
             'receipt' => 'nullable|file|mimes:pdf,jpeg,png,jpg|max:5120',
         ]);
+
+        if ($validated['category'] !== 'Other') {
+            $validated['other_category'] = null;
+        }
 
         if ($request->hasFile('receipt')) {
             if ($expense->receipt_path) {

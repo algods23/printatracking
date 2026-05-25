@@ -10,9 +10,11 @@ class Expense extends Model
     protected $fillable = [
         'expense_name',
         'category',
+        'other_category',
         'amount',
         'date',
         'description',
+        'receipt_number',
         'receipt_path',
         'recorded_by',
     ];

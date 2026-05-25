@@ -72,6 +72,7 @@
     </div>
 
     <!-- Monthly Sales -->
+    @if(auth()->user()->isAdmin())
     <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-gray-600 dark:text-gray-400 font-semibold">Monthly Sales</h3>
@@ -82,8 +83,10 @@
         <p class="text-3xl font-bold text-gray-900 dark:text-white">₱{{ number_format($monthlySales, 2) }}</p>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">This month's revenue</p>
     </div>
+    @endif
 
     <!-- Total Expenses -->
+    @if(auth()->user()->isAdmin())
     <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-gray-600 dark:text-gray-400 font-semibold">Total Expenses</h3>
@@ -94,10 +97,24 @@
         <p class="text-3xl font-bold text-gray-900 dark:text-white">₱{{ number_format($totalExpenses, 2) }}</p>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Monthly expenses</p>
     </div>
+    @endif
+    
+  <!-- Today Expenses -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="text-gray-600 dark:text-gray-400 font-semibold text-sm">Today Expenses</h3>
+            <div class="w-8 h-8 bg-red-500/10 rounded-lg flex items-center justify-center">
+                <i data-lucide="calendar" class="w-5 h-5 text-red-500"></i>
+            </div>
+        </div>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white">₱{{ number_format($todayTotal, 2) }}</p>
+    </div>
 </div>
 
+
+
 <!-- Charts and Analytics -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+<div class="grid grid-cols-1 {{ auth()->user()->isAdmin() ? 'lg:grid-cols-2' : '' }} gap-6 mb-8">
     <!-- Task Status Chart -->
     <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Task Status Distribution</h3>
@@ -108,6 +125,7 @@
     </div>
 
     <!-- Revenue Chart -->
+    @if(auth()->user()->isAdmin())
     <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Monthly Revenue</h3>
         {{-- ✅ FIX: wrap canvas in a fixed-height container --}}
@@ -115,6 +133,7 @@
             <canvas id="revenueChart"></canvas>
         </div>
     </div>
+    @endif
 </div>
 
 
@@ -169,6 +188,7 @@
     });
 
     // Monthly Revenue Chart
+    @if(auth()->user()->isAdmin())
     const revenueCtx  = document.getElementById('revenueChart').getContext('2d');
     const monthlyData = @json($monthlyRevenueData);
 
@@ -218,6 +238,7 @@
             }
         }
     });
+    @endif
 
     lucide.createIcons();
 </script>
