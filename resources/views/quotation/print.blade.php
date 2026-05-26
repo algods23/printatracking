@@ -4,92 +4,198 @@
     <meta charset="UTF-8">
     <title>Billing</title>
     <style>
-        @page { margin: 18px; }
-        body { font-family: DejaVu Sans, sans-serif; color: #111827; font-size: 12px; }
-        .header { margin-bottom: 14px; }
-        .title { font-size: 22px; font-weight: bold; margin-bottom: 4px; }
-        .subtitle { color: #6b7280; font-size: 11px; }
-        .customer-card { margin: 14px 0 16px; border: 1px solid #d1d5db; border-radius: 8px; padding: 12px 14px; }
-        .customer-label { color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
-        .customer-name { font-size: 16px; font-weight: bold; margin-bottom: 2px; }
-        .summary { width: 100%; border-collapse: collapse; margin: 12px 0 18px; table-layout: fixed; }
-        .summary th, .summary td { border: 1px solid #d1d5db; padding: 10px 12px; text-align: center; }
-        .summary th { background: #f3f4f6; font-weight: bold; }
-        .summary .value { font-size: 14px; font-weight: bold; }
-        .table { width: 100%; border-collapse: collapse; }
-        .table th, .table td { border: 1px solid #d1d5db; padding: 8px 10px; text-align: left; }
-        .table th { background: #e5e7eb; }
+        @page { margin: 14px; }
+        * { box-sizing: border-box; }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            color: #111827;
+            font-size: 10px;
+            margin: 0;
+            padding: 0;
+        }
+        .page {
+            width: 100%;
+        }
+        .brand-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .brand-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+        .logo {
+            width: 70px;
+            height: 52px;
+            object-fit: contain;
+            display: block;
+        }
+        .brand-text h1 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 800;
+            line-height: 1.05;
+            letter-spacing: 0.01em;
+        }
+        .brand-text .line {
+            margin-top: 2px;
+            font-size: 10px;
+            line-height: 1.2;
+        }
+        .billing-number {
+            font-size: 12px;
+            font-weight: 700;
+            text-align: right;
+            padding-top: 6px;
+            white-space: nowrap;
+        }
+        .client-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 4px 0 10px;
+            font-size: 10px;
+        }
+        .client-box {
+            max-width: 58%;
+        }
+        .client-label {
+            display: block;
+            font-size: 10px;
+        }
+        .client-name {
+            font-size: 13px;
+            font-weight: 700;
+            margin-top: 1px;
+        }
+        .client-subtext {
+            color: #4b5563;
+            font-size: 9px;
+            margin-top: 1px;
+        }
+        .statement-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 0.35em;
+            color: #c1121f;
+            margin: 8px 0 12px;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .table th,
+        .table td {
+            border: 1px solid #1f2937;
+            padding: 7px 6px;
+            vertical-align: top;
+        }
+        .table th {
+            background: #1d9ed8;
+            color: #ffffff;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-align: center;
+        }
+        .table td {
+            font-size: 9px;
+            line-height: 1.2;
+        }
+        .center { text-align: center; }
         .right { text-align: right; }
+        .details { word-break: break-word; }
         .muted { color: #6b7280; }
-        .badge { display: inline-block; padding: 3px 8px; border-radius: 999px; background: #fee2e2; color: #b91c1c; font-size: 11px; }
-        .page-break { page-break-after: always; }
+        .empty-row td { text-align: center; padding: 16px 8px; }
+        .total-row {
+            display: flex;
+            justify-content: flex-end;
+            align-items: baseline;
+            gap: 10px;
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: 800;
+        }
+        .total-row .label {
+            letter-spacing: 0.02em;
+        }
+        .total-row .value {
+            min-width: 120px;
+            text-align: right;
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="title">Billing Statement</div>
-        <div class="subtitle">Generated {{ $generatedAt->format('M d, Y h:i A') }}{{ $search ? ' for "' . $search . '"' : '' }}</div>
-    </div>
-
-    @if($customerName)
-        <div class="customer-card">
-            <div class="customer-label">Customer Name</div>
-            <div class="customer-name">{{ $customerName }}</div>
-            @if($customerContact)
-                <div class="muted">{{ $customerContact }}</div>
-            @endif
-        </div>
-    @endif
-
-    <table class="summary">
-        <tr>
-            <th>Total</th>
-            <th>Deposit</th>
-            <th>Balance</th>
-        </tr>
-        <tr>
-            <td class="value">₱{{ number_format($totalAmount, 2) }}</td>
-            <td class="value">₱{{ number_format($totalDeposit, 2) }}</td>
-            <td class="value">₱{{ number_format($totalBalance, 2) }}</td>
-        </tr>
-    </table>
-
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Billing ID</th>
-                @if($showCustomerColumn)
-                    <th>Customer</th>
+    <div class="page">
+        <div class="brand-row">
+            <div class="brand-left">
+                @if(!empty($logoDataUri))
+                    <img src="{{ $logoDataUri }}" alt="Logo" class="logo">
                 @endif
-                <th class="right">Total</th>
-                <th class="right">Deposit</th>
-                <th class="right">Balance</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($quotations as $task)
+                <div class="brand-text">
+                    <h1>{{ $companyName }}</h1>
+                    <div class="line">{{ $companyAddress }}</div>
+                    <div class="line">{{ $companyPhone }}</div>
+                </div>
+            </div>
+            <div class="billing-number">Billing Statement #{{ $billingReference }}</div>
+        </div>
+
+        <div class="client-row">
+            <div class="client-box">
+                <span class="client-label">Client Name :</span>
+                <div class="client-name">{{ $customerName ?: 'Multiple Customers' }}</div>
+                @if($customerContact)
+                    <div class="client-subtext">{{ $customerContact }}</div>
+                @endif
+            </div>
+        </div>
+
+        <div class="statement-title">BILLING STATEMENT</div>
+
+        <table class="table">
+            <thead>
                 <tr>
-                    <td>{{ $task->created_at->format('M d, Y') }}</td>
-                    <td>{{ $task->task_id }}</td>
-                    @if($showCustomerColumn)
-                        <td>
-                            {{ $task->customer_name }}<br>
-                            <span class="muted">{{ $task->contact_number }}</span>
-                        </td>
-                    @endif
-                    <td class="right">₱{{ number_format($task->amount, 2) }}</td>
-                    <td class="right">₱{{ number_format($task->paid_amount ?? 0, 2) }}</td>
-                    <td class="right">₱{{ number_format($task->balance, 2) }}</td>
-                    <td><span class="badge">{{ $task->payment_status }}</span></td>
+                    <th style="width: 16%">Date</th>
+                    <th style="width: 17%">Jo #</th>
+                    <th style="width: 9%">Qty</th>
+                    <th style="width: 10%">Unit</th>
+                    <th style="width: 28%">Details</th>
+                    <th style="width: 10%">Price</th>
+                    <th style="width: 10%">Amount</th>
                 </tr>
-            @empty
-                <tr>
-                    <td colspan="{{ $showCustomerColumn ? 7 : 6 }}">No billing data found.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @forelse($billingRows as $row)
+                    <tr>
+                        <td class="center">{{ $row['date'] }}</td>
+                        <td>{{ $row['job_order'] }}</td>
+                        <td class="center">{{ $row['quantity'] }}</td>
+                        <td class="center">{{ $row['unit'] }}</td>
+                        <td class="details">{{ $row['details'] }}</td>
+                        <td class="right">{{ number_format($row['price'], 2) }}</td>
+                        <td class="right">{{ number_format($row['amount'], 2) }}</td>
+                    </tr>
+                @empty
+                    <tr class="empty-row">
+                        <td colspan="7">No billing data found.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+
+        <div class="total-row">
+            <div class="label">TOTAL :</div>
+            <div class="value">{{ number_format($totalAmount, 2) }}</div>
+        </div>
+    </div>
 </body>
 </html>
