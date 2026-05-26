@@ -424,6 +424,14 @@
                     <td>Subtotal</td>
                     <td>{{ number_format($totalAmount, 2) }}</td>
                 </tr>
+                <tr class="subtotal">
+                    <td>Deposit</td>
+                    <td>{{ number_format($totalDeposit, 2) }}</td>
+                </tr>
+                <tr class="subtotal">
+                    <td>Balance</td>
+                    <td>{{ number_format($totalBalance, 2) }}</td>
+                </tr>
                 <tr class="total-due">
                     <td>TOTAL AMOUNT DUE</td>
                     <td>{{ number_format($totalAmount, 2) }}</td>
