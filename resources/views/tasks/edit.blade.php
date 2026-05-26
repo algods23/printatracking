@@ -61,9 +61,9 @@
                 <div class="md:col-span-2">
                     <label for="assigned_to" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Assign To</label>
                     <select id="assigned_to" name="assigned_to" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                        <option value="">Select staff</option>
+                        <option value="">Select user</option>
                         @foreach($staff as $member)
-                            <option value="{{ $member->id }}" {{ (string) old('assigned_to', $task->assigned_to) === (string) $member->id ? 'selected' : '' }}>{{ $member->name }}</option>
+                            <option value="{{ $member->id }}" {{ (string) old('assigned_to', $task->assigned_to) === (string) $member->id ? 'selected' : '' }}>{{ $member->name }} ({{ $member->role }})</option>
                         @endforeach
                     </select>
                 </div>

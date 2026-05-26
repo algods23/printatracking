@@ -30,7 +30,7 @@ class TaskController extends Controller
 
     public function create()
     {
-        $staff = User::where('role', 'Staff')->where('is_active', true)->get();
+        $staff = $this->assignableUsers();
         return view('tasks.create', compact('staff'));
     }
 
@@ -195,7 +195,7 @@ class TaskController extends Controller
         $this->authorizeTaskAccess($task);
 
         $task->load(['items', 'receipts']);
-        $staff = User::where('role', 'Staff')->where('is_active', true)->get();
+        $staff = $this->assignableUsers();
 
         return view('tasks.edit', compact('task', 'staff'));
     }
@@ -438,5 +438,14 @@ class TaskController extends Controller
     private function authorizeTaskAccess(Task $task): void
     {
         // Any authenticated user can view and edit transactions.
+    }
+
+    private function assignableUsers()
+    {
+        return User::whereIn('role', ['Admin', 'Staff'])
+            ->where('is_active', true)
+            ->orderBy('role')
+            ->orderBy('name')
+            ->get();
     }
 }
