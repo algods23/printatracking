@@ -65,7 +65,7 @@
                             <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $task->created_at->format('M d, Y') }}</td>
                             <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{{ $task->task_id }}</td>
                             <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                                <div>{{ $task->customer_name }}</div>
+                                <div class="capitalize">{{ $task->customer_name }}</div>
                                 <div class="text-xs text-gray-500">{{ $task->contact_number }}</div>
                             </td>
                             <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">₱{{ number_format($task->amount, 2) }}</td>

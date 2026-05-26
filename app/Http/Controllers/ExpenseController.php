@@ -126,8 +126,11 @@ class ExpenseController extends Controller
         return redirect()->route('expenses.show', $expense)->with('success', 'Expense updated successfully');
     }
 
-    public function destroy(Expense $expense)
+    public function destroy(Request $request, Expense $expense)
     {
+        $request->validate([
+            'admin_password' => ['required', 'current_password'],
+        ]);
         if ($expense->receipt_path) {
             Storage::disk('public')->delete($expense->receipt_path);
         }

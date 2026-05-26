@@ -117,8 +117,11 @@ class PcvController extends Controller
         return redirect()->route('pcv.show', $pcv)->with('success', 'PCV updated successfully');
     }
 
-    public function destroy(Pcv $pcv)
+    public function destroy(Request $request, Pcv $pcv)
     {
+        $request->validate([
+            'admin_password' => ['required', 'current_password'],
+        ]);
         if ($pcv->voucher_path) {
             Storage::disk('public')->delete($pcv->voucher_path);
         }

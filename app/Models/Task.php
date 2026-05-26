@@ -76,6 +76,11 @@ class Task extends Model
         $this->save();
     }
 
+    public function setCustomerNameAttribute($value)
+    {
+        $this->attributes['customer_name'] = ucwords(strtolower($value));
+    }
+
     public function recordPayment(float $amount, string $paymentMethod, ?string $reference = null, ?int $issuedBy = null): ?Receipt
     {
         $this->load('items');

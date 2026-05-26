@@ -83,13 +83,9 @@
                                     <i data-lucide="edit" class="w-4 h-4"></i>
                                 </a>
                                 @if(auth()->user()->isAdmin())
-                                <form action="{{ route('expenses.destroy', $expense) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="p-2 text-red-600 dark:text-red-400 hover:bg-red-500/10 rounded transition-colors">
-                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                    </button>
-                                </form>
+                                <button type="button" onclick="openDeleteModal({{ $expense->id }})" class="p-2 text-red-600 dark:text-red-400 hover:bg-red-500/10 rounded transition-colors">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
                                 @endif
                             </div>
                         </td>
@@ -115,10 +111,50 @@
     {{ $expenses->links() }}
 </div>
 
+<!-- Delete Expense Modal -->
+<div id="deleteModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 max-w-md w-full mx-4 shadow-lg">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Delete Disbursement</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Are you sure you want to delete this disbursement? This action cannot be undone.</p>
+        <form id="deleteForm" method="POST" class="space-y-4">
+            @csrf
+            @method('DELETE')
+            <div>
+                <label for="admin_password_expense" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Admin Password *</label>
+                <input type="password" id="admin_password_expense" name="admin_password" required placeholder="Enter your password to confirm" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 @error('admin_password') border-red-500 @enderror">
+                @error('admin_password')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeDeleteModal()" class="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" class="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors">
+                    Confirm Delete
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @endsection
 
 @section('scripts')
 <script>
     lucide.createIcons();
+
+    function openDeleteModal(id) {
+        const modal = document.getElementById('deleteModal');
+        const form = document.getElementById('deleteForm');
+        form.action = `/expenses/${id}`;
+        modal.classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        const modal = document.getElementById('deleteModal');
+        modal.classList.add('hidden');
+        document.getElementById('admin_password_expense').value = '';
+    }
 </script>
 @endsection

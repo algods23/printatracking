@@ -332,6 +332,7 @@ class TaskController extends Controller
 
         $validated = $request->validate([
             'cancellation_reason' => 'nullable|string|max:500',
+            'admin_password'      => ['required', 'current_password'],
         ]);
 
         // Delete all receipts for this task to reset paid amount to 0

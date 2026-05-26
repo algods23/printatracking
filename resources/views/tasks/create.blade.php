@@ -32,7 +32,7 @@
                 <!-- Customer Name -->
                 <div class="md:col-span-2">
                     <label for="customer_name" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Customer Name *</label>
-                    <input type="text" id="customer_name" name="customer_name" value="{{ old('customer_name') }}" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('customer_name') border-red-500 @enderror" />
+                    <input type="text" id="customer_name" name="customer_name" value="{{ old('customer_name') }}" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 capitalize @error('customer_name') border-red-500 @enderror" />
                     @error('customer_name')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
