@@ -129,11 +129,26 @@ class QuotationController extends Controller
         $totalAmount = (float) $quotations->sum('amount');
         $totalDeposit = (float) $quotations->sum(fn ($task) => (float) ($task->paid_amount ?? $task->receipts->sum('cash_received')));
         $totalBalance = (float) $quotations->sum(fn ($task) => (float) $task->balance);
-        $singleCustomer = $customerName !== null && $customerName !== '';
-        $displayCustomerName = $singleCustomer
-            ? $customerName
-            : ($quotations->count() === 1 ? $quotations->first()?->customer_name : null);
-        $displayContactNumber = $singleCustomer ? $quotations->first()?->contact_number : null;
+
+        $customerNames = $quotations
+            ->pluck('customer_name')
+            ->filter()
+            ->map(fn ($name) => trim((string) $name))
+            ->unique(fn ($name) => mb_strtolower($name))
+            ->values();
+
+        $contactNumbers = $quotations
+            ->pluck('contact_number')
+            ->filter()
+            ->map(fn ($number) => trim((string) $number))
+            ->unique(fn ($number) => mb_strtolower($number))
+            ->values();
+
+        $displayCustomerName = $customerNames->count() === 1
+            ? $customerNames->first()
+            : ($customerName ?: null);
+        $displayContactNumber = $contactNumbers->count() === 1 ? $contactNumbers->first() : null;
+        $multipleCustomers = $customerNames->count() > 1;
 
         $companyName = Setting::get('company_name', 'PRINTA SIGNAGES & STICKERS');
         $companyAddress = Setting::get('company_address', 'KUMINTANG ST., MINTAL, DAVAO CITY');
@@ -141,20 +156,26 @@ class QuotationController extends Controller
         $logoPath = Setting::get('company_logo');
         $logoDataUri = null;
 
-        if ($logoPath) {
-            $logoFile = public_path('storage/' . $logoPath);
+        $logoCandidates = array_filter([
+            $logoPath ? public_path('storage/' . $logoPath) : null,
+            public_path('images/printa-3color.png'),
+        ]);
 
-            if (is_file($logoFile)) {
-                $extension = strtolower(pathinfo($logoFile, PATHINFO_EXTENSION));
-                $mimeType = match ($extension) {
-                    'jpg', 'jpeg' => 'image/jpeg',
-                    'gif' => 'image/gif',
-                    'webp' => 'image/webp',
-                    default => 'image/png',
-                };
-
-                $logoDataUri = 'data:' . $mimeType . ';base64,' . base64_encode(file_get_contents($logoFile));
+        foreach ($logoCandidates as $logoFile) {
+            if (! is_file($logoFile)) {
+                continue;
             }
+
+            $extension = strtolower(pathinfo($logoFile, PATHINFO_EXTENSION));
+            $mimeType = match ($extension) {
+                'jpg', 'jpeg' => 'image/jpeg',
+                'gif' => 'image/gif',
+                'webp' => 'image/webp',
+                default => 'image/png',
+            };
+
+            $logoDataUri = 'data:' . $mimeType . ';base64,' . base64_encode(file_get_contents($logoFile));
+            break;
         }
 
         $billingReference = str_pad((string) ($quotations->first()?->id ?? 1), 3, '0', STR_PAD_LEFT);
@@ -168,13 +189,15 @@ class QuotationController extends Controller
             'search' => $request->input('q'),
             'customerName' => $displayCustomerName,
             'customerContact' => $displayContactNumber,
-            'showCustomerColumn' => ! $singleCustomer,
+            'showCustomerColumn' => $multipleCustomers,
             'generatedAt' => now(),
             'billingReference' => $billingReference,
             'companyName' => $companyName,
             'companyAddress' => $companyAddress,
             'companyPhone' => $companyPhone,
             'logoDataUri' => $logoDataUri,
+            'dueDate' => \Carbon\Carbon::parse($request->input('due_date', now()->addDays(14)))->format('M d, Y'),
+            'authRep' => $request->input('auth_rep', 'Jelian Fernandez'),
         ])->setPaper('a4', 'portrait');
 
         $filename = 'billing-' . ($displayCustomerName ? Str::slug($displayCustomerName) . '-' : '') . now()->format('Ymd-His') . '.pdf';

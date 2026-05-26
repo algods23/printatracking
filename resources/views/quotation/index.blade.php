@@ -14,7 +14,7 @@
         <div class="flex gap-2">
             <button type="submit" class="px-5 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors">Search</button>
             <a href="{{ route('billing.index') }}" class="px-5 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Clear</a>
-            <button id="downloadBtn" type="button" onclick="submitSelectedDownload(); return false;" class="px-5 py-2.5 bg-green-700 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors">Download File</button>
+            <button id="downloadBtn" type="button" onclick="openDownloadModal(); return false;" class="px-5 py-2.5 bg-green-700 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors">Download File</button>
         </div>
     </form>
 
@@ -88,7 +88,7 @@
                                     <a href="{{ route('tasks.show', $task) }}" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 rounded transition-colors inline-flex" title="View task">
                                         <i data-lucide="eye" class="w-4 h-4"></i>
                                     </a>
-                                    <a href="{{ route('billing.download', ['customer' => $task->customer_name]) }}" class="p-2 text-green-700 dark:text-green-400 hover:bg-green-500/10 rounded transition-colors inline-flex" title="Download customer billing PDF">
+                                    <a href="#" data-customer="{{ $task->customer_name }}" onclick="openDownloadModal(this.getAttribute('data-customer')); return false;" class="p-2 text-green-700 dark:text-green-400 hover:bg-green-500/10 rounded transition-colors inline-flex" title="Download customer billing PDF">
                                         <i data-lucide="download" class="w-4 h-4"></i>
                                     </a>
                                 </div>
@@ -112,6 +112,30 @@
     <div class="mt-6">
         {{ $quotations->links() }}
     </div>
+
+    <!-- Download Modal -->
+    <div id="downloadModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-md p-6">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Download Billing Statement</h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="modal_due_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
+                    <input type="date" id="modal_due_date" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-gray-900 dark:text-white" value="{{ now()->addDays(14)->format('Y-m-d') }}">
+                </div>
+                
+                <div>
+                    <label for="modal_auth_rep" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Authorized Representative</label>
+                    <input type="text" id="modal_auth_rep" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-gray-900 dark:text-white" value="Jelian Fernandez">
+                </div>
+            </div>
+            
+            <div class="mt-6 flex justify-end gap-3">
+                <button type="button" onclick="closeDownloadModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Cancel</button>
+                <button type="button" onclick="confirmDownload()" class="px-4 py-2 bg-green-700 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors">Download</button>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -129,33 +153,71 @@
         }
     }
 
-    function submitSelectedDownload() {
-        var checked = document.querySelectorAll('.row-checkbox:checked');
-        if (!checked.length) {
-            return;
-        }
+    var downloadCustomer = null;
 
+    function openDownloadModal(customer) {
+        downloadCustomer = customer || null;
+        document.getElementById('downloadModal').classList.remove('hidden');
+    }
+
+    function closeDownloadModal() {
+        document.getElementById('downloadModal').classList.add('hidden');
+        downloadCustomer = null;
+    }
+
+    function confirmDownload() {
+        var dueDate = document.getElementById('modal_due_date').value;
+        var authRep = document.getElementById('modal_auth_rep').value;
+        
         var form = document.getElementById('downloadSelectedForm');
         form.innerHTML = '';
+        
+        var dueDateInput = document.createElement('input');
+        dueDateInput.type = 'hidden';
+        dueDateInput.name = 'due_date';
+        dueDateInput.value = dueDate;
+        form.appendChild(dueDateInput);
+        
+        var authRepInput = document.createElement('input');
+        authRepInput.type = 'hidden';
+        authRepInput.name = 'auth_rep';
+        authRepInput.value = authRep;
+        form.appendChild(authRepInput);
 
-        checked.forEach(function(cb) {
-            var input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'ids[]';
-            input.value = cb.value;
-            form.appendChild(input);
-        });
+        if (downloadCustomer !== null) {
+            var custInput = document.createElement('input');
+            custInput.type = 'hidden';
+            custInput.name = 'customer';
+            custInput.value = downloadCustomer;
+            form.appendChild(custInput);
+        } else {
+            var checked = document.querySelectorAll('.row-checkbox:checked');
+            if (!checked.length) {
+                alert('Please select at least one record to download.');
+                closeDownloadModal();
+                return;
+            }
 
-        var searchInput = document.getElementById('q');
-        if (searchInput && searchInput.value.trim() !== '') {
-            var queryInput = document.createElement('input');
-            queryInput.type = 'hidden';
-            queryInput.name = 'q';
-            queryInput.value = searchInput.value.trim();
-            form.appendChild(queryInput);
+            checked.forEach(function(cb) {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids[]';
+                input.value = cb.value;
+                form.appendChild(input);
+            });
+
+            var searchInput = document.getElementById('q');
+            if (searchInput && searchInput.value.trim() !== '') {
+                var queryInput = document.createElement('input');
+                queryInput.type = 'hidden';
+                queryInput.name = 'q';
+                queryInput.value = searchInput.value.trim();
+                form.appendChild(queryInput);
+            }
         }
-
+        
         form.submit();
+        closeDownloadModal();
     }
 
     function toggleAll(source) {
