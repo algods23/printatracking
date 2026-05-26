@@ -74,13 +74,14 @@ class QuotationController extends Controller
         }
 
         $customerName = $request->input('customer');
+        $selectedIds = array_values(array_filter((array) $request->input('ids', [])));
         $query = Task::query()
             ->with(['assignedTo', 'receipts'])
             ->where('status', '!=', 'Cancelled')
             ->where('payment_status', '!=', 'Paid');
 
-        if ($request->has('ids')) {
-            $query->whereIn('id', $request->input('ids'));
+        if (! empty($selectedIds)) {
+            $query->whereIn('id', $selectedIds);
         } elseif ($customerName) {
             $query->where('customer_name', $customerName);
         } elseif ($request->filled('q')) {

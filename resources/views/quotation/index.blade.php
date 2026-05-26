@@ -14,9 +14,11 @@
         <div class="flex gap-2">
             <button type="submit" class="px-5 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors">Search</button>
             <a href="{{ route('billing.index') }}" class="px-5 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Clear</a>
-            <a id="downloadBtn" href="{{ route('billing.download', request()->filled('q') ? ['q' => request('q')] : []) }}" class="px-5 py-2.5 bg-green-700 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors">Download File</a>
+            <button id="downloadBtn" type="button" onclick="submitSelectedDownload(); return false;" class="px-5 py-2.5 bg-green-700 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors">Download File</button>
         </div>
     </form>
+
+    <form id="downloadSelectedForm" action="{{ route('billing.download') }}" method="GET" class="hidden"></form>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
@@ -117,25 +119,43 @@
 <script>
     lucide.createIcons();
 
-    var _downloadOriginalHref = '{{ route("billing.download") }}';
-
     function updateDownloadBtn() {
         var downloadBtn = document.getElementById('downloadBtn');
         var checked = document.querySelectorAll('.row-checkbox:checked');
         if (checked.length > 0) {
             downloadBtn.textContent = 'Download Selected (' + checked.length + ')';
-            downloadBtn.classList.remove('opacity-50', 'pointer-events-none', 'cursor-not-allowed');
-            var url = new URL(_downloadOriginalHref, window.location.origin);
-            url.searchParams.delete('ids[]');
-            checked.forEach(function(cb) {
-                url.searchParams.append('ids[]', cb.value);
-            });
-            downloadBtn.setAttribute('href', url.toString());
         } else {
             downloadBtn.textContent = 'Download File';
-            downloadBtn.classList.add('opacity-50', 'pointer-events-none', 'cursor-not-allowed');
-            downloadBtn.setAttribute('href', '#');
         }
+    }
+
+    function submitSelectedDownload() {
+        var checked = document.querySelectorAll('.row-checkbox:checked');
+        if (!checked.length) {
+            return;
+        }
+
+        var form = document.getElementById('downloadSelectedForm');
+        form.innerHTML = '';
+
+        checked.forEach(function(cb) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'ids[]';
+            input.value = cb.value;
+            form.appendChild(input);
+        });
+
+        var searchInput = document.getElementById('q');
+        if (searchInput && searchInput.value.trim() !== '') {
+            var queryInput = document.createElement('input');
+            queryInput.type = 'hidden';
+            queryInput.name = 'q';
+            queryInput.value = searchInput.value.trim();
+            form.appendChild(queryInput);
+        }
+
+        form.submit();
     }
 
     function toggleAll(source) {
