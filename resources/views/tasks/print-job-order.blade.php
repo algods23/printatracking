@@ -21,13 +21,13 @@
             line-height: 1.2;
             display: flex;
             flex-wrap: wrap;
-            gap: 0.2in;
+            gap: 0.3in;
         }
         .sheet {
             width: 3.85in;
             max-width: 100%;
             margin: 0;
-            padding: 0.15in;
+            padding: 0.18in;
             border: 1px dashed #999;
             flex: 0 0 auto;
         }
@@ -72,7 +72,7 @@
             align-items: flex-start;
             justify-content: space-between;
             gap: 4px;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
         .logo-block {
             display: flex;
@@ -144,7 +144,7 @@
             font-size: 9px;
         }
         .customer-block {
-            margin: 3px 0 2px;
+            margin: 5px 0 4px;
         }
         .field-line {
             display: grid;
@@ -172,13 +172,13 @@
         table.items {
             width: 100%;
             border-collapse: collapse;
-            margin: 4px 0 3px;
+            margin: 6px 0 5px;
             font-size: 8px;
         }
         table.items th,
         table.items td {
             border: 1px solid #000; 
-            padding: 1px 2px;
+            padding: 2px 4px;
             font-size: 8px;
         }
         table.items th {
@@ -188,6 +188,10 @@
         }
         table.items td.desc {
             text-align: left;
+            padding-left: 8px;
+            padding-top: 3px;
+            padding-bottom: 10px;
+            line-height: 1.25;
         }
         table.items td.n {
             text-align: center;
@@ -197,7 +201,7 @@
         }
         .cols-bottom {
             display: block;
-            margin-top: 3px;
+            margin-top: 5px;
         }
         .left-col {
             margin-bottom: 3px;
