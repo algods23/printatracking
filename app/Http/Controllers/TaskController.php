@@ -396,8 +396,14 @@ class TaskController extends Controller
             });
         }
 
-        if (! $showArchived && $request->status) {
-            $query->where('status', $request->status);
+        if ($request->filled('status')) {
+            $allowedStatuses = $showArchived
+                ? ['Received', 'Cancelled']
+                : ['Pending', 'Designing', 'Printing', 'Installing', 'Completed', 'Received'];
+
+            if (in_array($request->status, $allowedStatuses, true)) {
+                $query->where('status', $request->status);
+            }
         }
 
         if ($request->priority) {
@@ -425,19 +431,11 @@ class TaskController extends Controller
 
     private function visibleTasksQuery()
     {
-        $query = Task::query();
-
-        if (! Auth::user()->isAdmin()) {
-            $query->where('assigned_to', Auth::id());
-        }
-
-        return $query;
+        return Task::query();
     }
 
     private function authorizeTaskAccess(Task $task): void
     {
-        if (! Auth::user()->isAdmin() && (int) $task->assigned_to !== (int) Auth::id()) {
-            abort(403, 'You can only access tasks assigned to your account.');
-        }
+        // Any authenticated user can view and edit transactions.
     }
 }

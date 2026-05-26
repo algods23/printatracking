@@ -85,24 +85,24 @@
     </div>
     @endif
 
-    <!-- Total Expenses -->
+    <!-- Total Disbursement -->
     @if(auth()->user()->isAdmin())
     <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-gray-600 dark:text-gray-400 font-semibold">Total Expenses</h3>
+            <h3 class="text-gray-600 dark:text-gray-400 font-semibold">Total Disbursement</h3>
             <div class="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center">
                 <i data-lucide="credit-card" class="w-6 h-6 text-red-500"></i>
             </div>
         </div>
         <p class="text-3xl font-bold text-gray-900 dark:text-white">₱{{ number_format($totalExpenses, 2) }}</p>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Monthly expenses</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Monthly disbursement</p>
     </div>
     @endif
     
-  <!-- Today Expenses -->
+  <!-- Today Disbursement -->
     <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
         <div class="flex items-center justify-between mb-2">
-            <h3 class="text-gray-600 dark:text-gray-400 font-semibold text-sm">Today Expenses</h3>
+            <h3 class="text-gray-600 dark:text-gray-400 font-semibold text-sm">Today Disbursement</h3>
             <div class="w-8 h-8 bg-red-500/10 rounded-lg flex items-center justify-center">
                 <i data-lucide="calendar" class="w-5 h-5 text-red-500"></i>
             </div>

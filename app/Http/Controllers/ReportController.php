@@ -15,12 +15,13 @@ class ReportController extends Controller
 {
     private const REPORT_TYPES = [
         'sales'          => 'Sales report',
-        'expenses'       => 'Expense report',
+        'expenses'       => 'Disbursement report',
         'pcv'            => 'PCV report',
         'tasks'          => 'Task report',
+        'billing'        => 'Billing report',
         'productivity'   => 'Productivity',
         'monthly'        => 'Monthly summary',
-        'daily_expenses' => 'Daily expenses',
+        'daily_expenses' => 'Daily disbursement',
         'daily_report'   => 'Daily report',
     ];
 
@@ -29,6 +30,7 @@ class ReportController extends Controller
         'expenses'       => ['icon' => 'receipt', 'wide' => false],
         'pcv'            => ['icon' => 'wallet', 'wide' => false],
         'tasks'          => ['icon' => 'check-square', 'wide' => false],
+        'billing'        => ['icon' => 'file-text', 'wide' => false],
         'productivity'   => ['icon' => 'zap', 'wide' => false],
         'monthly'        => ['icon' => 'calendar-clock', 'wide' => false],
         'daily_expenses' => ['icon' => 'calendar', 'wide' => false],
@@ -45,6 +47,7 @@ class ReportController extends Controller
             unset($allTypes['productivity']);
             unset($allTypes['expenses']);
             unset($allTypes['pcv']);
+            unset($allTypes['billing']);
         }
 
         return $allTypes;
@@ -134,6 +137,7 @@ class ReportController extends Controller
             'expenses'       => $this->expenseData($startDate, $endDate),
             'pcv'            => $this->pcvData($startDate, $endDate),
             'tasks'          => $this->taskData($startDate, $endDate),
+            'billing'        => $this->billingData($startDate, $endDate),
             'productivity'   => $this->productivityData($startDate, $endDate),
             'monthly'        => $this->monthlyData($startDate, $endDate),
             'daily_expenses' => $this->dailyExpensesData($startDate, $endDate),
@@ -357,6 +361,29 @@ class ReportController extends Controller
             'totalSales'    => $totalSales,
             'totalExpenses' => $totalExpenses,
             'netProfit'     => $totalSales - $totalExpenses,
+        ];
+    }
+
+    private function billingData(string $startDate, string $endDate): array
+    {
+        $tasks = Task::whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate)
+            ->where('status', '!=', 'Cancelled')
+            ->where('payment_status', '!=', 'Paid')
+            ->with(['assignedTo', 'receipts'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        $totalAmount = (float) $tasks->sum('amount');
+        $totalDeposit = (float) $tasks->sum(fn ($task) => (float) $task->receipts->sum('cash_received'));
+        $totalBalance = (float) $tasks->sum(fn ($task) => (float) $task->balance);
+
+        return [
+            'type'         => 'billing',
+            'tasks'        => $tasks,
+            'totalAmount'  => $totalAmount,
+            'totalDeposit' => $totalDeposit,
+            'totalBalance' => $totalBalance,
         ];
     }
 }

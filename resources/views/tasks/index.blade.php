@@ -26,8 +26,14 @@
     </div>
     <select onchange="filterTasks()" id="statusFilter" name="status" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
         <option value="">All Status</option>
-        <option value="Received">Received</option>
-        <option value="Cancelled">Cancelled</option>
+        @if($isArchived)
+            <option value="Received">Received</option>
+            <option value="Cancelled">Cancelled</option>
+        @else
+            <option value="Pending">Pending</option>
+            <option value="Completed">Completed</option>
+            <option value="Received">Received</option>
+        @endif
     </select>
     <select onchange="filterTasks()" id="priorityFilter" name="priority" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
         <option value="">All Priority</option>

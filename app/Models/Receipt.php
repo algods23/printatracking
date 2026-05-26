@@ -21,6 +21,7 @@ class Receipt extends Model
         'cash_received',
         'change',
         'payment_method',
+        'payment_channel',
         'payment_reference',
         'notes',
         'issued_by',
@@ -48,6 +49,11 @@ class Receipt extends Model
     public function items(): HasMany
     {
         return $this->hasMany(ReceiptItem::class);
+    }
+
+    public function getDisplayPaymentMethodAttribute(): string
+    {
+        return $this->payment_channel ?: $this->payment_method;
     }
 
     protected static function boot()

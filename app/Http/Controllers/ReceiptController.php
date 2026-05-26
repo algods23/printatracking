@@ -23,10 +23,6 @@ class ReceiptController extends Controller
     {
         $tasksQuery = Task::where('status', '!=', 'Cancelled');
 
-        if (! Auth::user()->isAdmin()) {
-            $tasksQuery->where('assigned_to', Auth::id());
-        }
-
         $tasks = $tasksQuery
             ->withSum('receipts as paid_amount', 'cash_received')
             ->latest()
@@ -48,20 +44,18 @@ class ReceiptController extends Controller
         $validated = $request->validate([
             'task_id' => 'required|exists:tasks,id',
             'payment_amount' => 'required|numeric|min:0.01',
-            'payment_method' => 'required|in:Cash,Card,Check,Bank Transfer,Other',
+            'payment_method' => 'required|in:Cash,Card,Check,Bank Transfer,GCash,Maya,Credit Card,Other',
             'payment_reference' => 'required_unless:payment_method,Cash|nullable|string|max:100',
             'notes' => 'nullable|string',
         ]);
 
-        $receipt = DB::transaction(function () use ($validated) {
+        $normalizedMethod = $this->normalizePaymentMethod($validated['payment_method']);
+
+        $receipt = DB::transaction(function () use ($validated, $normalizedMethod) {
             $task = Task::with(['items'])
                 ->withSum('receipts as paid_amount', 'cash_received')
                 ->lockForUpdate()
                 ->findOrFail($validated['task_id']);
-
-            if (! Auth::user()->isAdmin() && (int) $task->assigned_to !== (int) Auth::id()) {
-                abort(403, 'You can only access tasks assigned to your account.');
-            }
 
             $paidAmount = (float) ($task->paid_amount ?? 0);
             $taskAmount = (float) $task->amount;
@@ -87,8 +81,9 @@ class ReceiptController extends Controller
                 'total' => $taskAmount,
                 'cash_received' => $paymentAmount,
                 'change' => 0,
-                'payment_method' => $validated['payment_method'],
-                'payment_reference' => $validated['payment_method'] === 'Cash' ? null : $validated['payment_reference'],
+                'payment_method' => $normalizedMethod,
+                'payment_channel' => $validated['payment_method'],
+                'payment_reference' => $normalizedMethod === 'Cash' ? null : $validated['payment_reference'],
                 'notes' => $validated['notes'] ?? null,
                 'issued_by' => Auth::id(),
             ]);
@@ -150,12 +145,14 @@ class ReceiptController extends Controller
         $validated = $request->validate([
             'task_id' => 'required|exists:tasks,id',
             'payment_amount' => 'required|numeric|min:0.01',
-            'payment_method' => 'required|in:Cash,Card,Check,Bank Transfer,Other',
+            'payment_method' => 'required|in:Cash,Card,Check,Bank Transfer,GCash,Maya,Credit Card,Other',
             'payment_reference' => 'required_unless:payment_method,Cash|nullable|string|max:100',
             'notes' => 'nullable|string',
         ]);
 
-        DB::transaction(function () use ($validated, $receipt) {
+        $normalizedMethod = $this->normalizePaymentMethod($validated['payment_method']);
+
+        DB::transaction(function () use ($validated, $receipt, $normalizedMethod) {
             $task = Task::withSum('receipts as paid_amount', 'cash_received')
                 ->lockForUpdate()
                 ->findOrFail($validated['task_id']);
@@ -175,8 +172,9 @@ class ReceiptController extends Controller
                 'total' => $taskAmount,
                 'cash_received' => $paymentAmount,
                 'change' => 0,
-                'payment_method' => $validated['payment_method'],
-                'payment_reference' => $validated['payment_method'] === 'Cash' ? null : $validated['payment_reference'],
+                'payment_method' => $normalizedMethod,
+                'payment_channel' => $validated['payment_method'],
+                'payment_reference' => $normalizedMethod === 'Cash' ? null : $validated['payment_reference'],
                 'notes' => $validated['notes'] ?? null,
             ]);
 
@@ -243,6 +241,17 @@ class ReceiptController extends Controller
         $pdf = Pdf::loadView('receipts.print', ['receipt' => $receipt]);
 
         return $pdf->download("receipt-{$receipt->receipt_number}.pdf");
+    }
+
+    private function normalizePaymentMethod(string $method): string
+    {
+        return match ($method) {
+            'Credit Card' => 'Card',
+            'GCash', 'Maya' => 'Other',
+            default => in_array($method, ['Cash', 'Card', 'Check', 'Bank Transfer', 'Other'], true)
+                ? $method
+                : 'Other',
+        };
     }
 
 }

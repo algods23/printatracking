@@ -1,6 +1,6 @@
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
     <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-        <p class="text-sm text-gray-500 dark:text-gray-400">Total expenses</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Total disbursement</p>
         <p class="text-2xl font-bold text-red-600 dark:text-red-400">&#8369;{{ number_format($totalExpenses, 2) }}</p>
     </div>
     <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -42,7 +42,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">No expenses in this period.</td>
+                    <td colspan="5" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">No disbursements in this period.</td>
                 </tr>
             @endforelse
         </tbody>

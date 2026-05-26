@@ -391,7 +391,7 @@
                     <div class="p-6 flex items-center justify-between gap-4">
                         <div>
                             <p class="font-semibold text-gray-900 dark:text-white">{{ $receipt->receipt_number }}</p>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ $receipt->created_at->format('M d, Y - h:i A') }} via {{ $receipt->payment_method }}</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ $receipt->created_at->format('M d, Y - h:i A') }} via {{ $receipt->display_payment_method }}</p>
                             @if($receipt->payment_reference)
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Ref: {{ $receipt->payment_reference }}</p>
                             @endif

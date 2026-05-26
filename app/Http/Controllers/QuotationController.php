@@ -3,14 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class QuotationController extends Controller
 {
     public function index(Request $request)
     {
         if (! auth()->check() || ! auth()->user()?->isAdmin()) {
-            abort(403, 'Only administrators can access quotations.');
+            abort(403, 'Only administrators can access billing.');
         }
 
         $query = Task::query()
@@ -68,15 +70,20 @@ class QuotationController extends Controller
     public function download(Request $request)
     {
         if (! auth()->check() || ! auth()->user()?->isAdmin()) {
-            abort(403, 'Only administrators can access quotations.');
+            abort(403, 'Only administrators can access billing.');
         }
 
+        $customerName = $request->input('customer');
         $query = Task::query()
             ->with(['assignedTo', 'receipts'])
             ->where('status', '!=', 'Cancelled')
             ->where('payment_status', '!=', 'Paid');
 
-        if ($request->filled('q')) {
+        if ($request->has('ids')) {
+            $query->whereIn('id', $request->input('ids'));
+        } elseif ($customerName) {
+            $query->where('customer_name', $customerName);
+        } elseif ($request->filled('q')) {
             $search = $request->input('q');
             $query->where(function ($q) use ($search) {
                 $q->where('customer_name', 'like', "%{$search}%")
@@ -90,22 +97,26 @@ class QuotationController extends Controller
         $totalAmount = (float) $quotations->sum('amount');
         $totalDeposit = (float) $quotations->sum(fn ($task) => (float) ($task->paid_amount ?? $task->receipts->sum('cash_received')));
         $totalBalance = (float) $quotations->sum(fn ($task) => (float) $task->balance);
+        $singleCustomer = $customerName !== null && $customerName !== '';
+        $displayCustomerName = $singleCustomer
+            ? $customerName
+            : ($quotations->count() === 1 ? $quotations->first()?->customer_name : null);
+        $displayContactNumber = $singleCustomer ? $quotations->first()?->contact_number : null;
 
-        $html = view('quotation.print', [
+        $pdf = Pdf::loadView('quotation.print', [
             'quotations' => $quotations,
             'totalAmount' => $totalAmount,
             'totalDeposit' => $totalDeposit,
             'totalBalance' => $totalBalance,
             'search' => $request->input('q'),
+            'customerName' => $displayCustomerName,
+            'customerContact' => $displayContactNumber,
+            'showCustomerColumn' => ! $singleCustomer,
             'generatedAt' => now(),
-        ])->render();
+        ])->setPaper('a4', 'portrait');
 
-        $filename = 'quotation-' . now()->format('Ymd-His') . '.html';
+        $filename = 'billing-' . ($displayCustomerName ? Str::slug($displayCustomerName) . '-' : '') . now()->format('Ymd-His') . '.pdf';
 
-        return response()->streamDownload(function () use ($html) {
-            echo $html;
-        }, $filename, [
-            'Content-Type' => 'text/html; charset=UTF-8',
-        ]);
+        return $pdf->download($filename);
     }
 }

@@ -6,13 +6,35 @@ use App\Models\Task;
 use App\Models\Receipt;
 use App\Models\Expense;
 use App\Models\ActivityLog;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
     public function index()
+    {
+        return view('dashboard.lock');
+    }
+
+    public function unlock(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        $user = Auth::user();
+
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            return back()->with('error', 'Incorrect password. Please try again.');
+        }
+
+        return view('dashboard.index', $this->dashboardViewData());
+    }
+
+    private function dashboardViewData(): array
     {
         $isAdmin = Auth::user()?->isAdmin() ?? false;
         $today = Carbon::today();
@@ -83,7 +105,7 @@ class DashboardController extends Controller
             ->orderBy('month')
             ->get();
 
-        return view('dashboard.index', [
+        return [
             'totalTasks' => $totalTasks,
             'pendingTasks' => $pendingTasks,
             'receivedTasks' => $receivedTasks,
@@ -95,6 +117,6 @@ class DashboardController extends Controller
             'recentActivities' => $recentActivities,
             'taskStatusData' => $taskStatusData,
             'monthlyRevenueData' => $monthlyRevenueData,
-        ]);
+        ];
     }
 }

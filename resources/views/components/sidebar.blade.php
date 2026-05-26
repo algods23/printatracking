@@ -25,10 +25,10 @@
                 <span>Tasks</span>
             </a>
 
-            <!-- Expenses -->
+            <!-- Disbursement -->
             <a href="{{ route('expenses.index') }}" class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors {{ request()->routeIs('expenses.*') ? 'bg-yellow-500 text-black' : '' }}">
                 <i data-lucide="credit-card" class="w-5 h-5"></i>
-                <span>Expenses</span>
+                <span>Disbursement</span>
             </a>
 
             <!-- PCV -->
@@ -37,11 +37,11 @@
                 <span>PCV</span>
             </a>
 
-            <!-- Quotation -->
+            <!-- Billing -->
             @if(auth()->user()->isAdmin())
-            <a href="{{ route('quotation.index') }}" class="nav-link {{ request()->routeIs('quotation.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors {{ request()->routeIs('quotation.*') ? 'bg-yellow-500 text-black' : '' }}">
+            <a href="{{ route('billing.index') }}" class="nav-link {{ request()->routeIs('billing.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors {{ request()->routeIs('billing.*') ? 'bg-yellow-500 text-black' : '' }}">
                 <i data-lucide="file-text" class="w-5 h-5"></i>
-                <span>Quotation</span>
+                <span>Billing</span>
             </a>
             @endif
 

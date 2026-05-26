@@ -34,6 +34,7 @@
         <table class="w-full">
             <thead>
                 <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">PCV #</th>
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Name</th>
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Category</th>
                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Amount</th>
@@ -45,6 +46,7 @@
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse($pcvs as $pcv)
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                        <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">{{ $pcv->display_pcv_number }}</td>
                         <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">{{ $pcv->pcv_name }}</td>
                         <td class="px-6 py-4 text-sm">
                             <span class="inline-block px-3 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-xs font-medium">{{ $pcv->category === 'Other' && $pcv->other_category ? $pcv->other_category : $pcv->category }}</span>
@@ -72,7 +74,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center">
+                        <td colspan="7" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <i data-lucide="inbox" class="w-12 h-12 text-gray-400"></i>
                                 <p class="text-gray-500 dark:text-gray-400">No PCV records found</p>

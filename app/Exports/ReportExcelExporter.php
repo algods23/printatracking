@@ -17,12 +17,13 @@ class ReportExcelExporter
 {
     private const SHEET_TITLES = [
         'sales'          => 'Sales Report',
-        'expenses'       => 'Expense Report',
+        'expenses'       => 'Disbursement Report',
         'pcv'            => 'PCV Report',
         'tasks'          => 'Task Report',
+        'billing'        => 'Billing Report',
         'productivity'   => 'Productivity',
         'monthly'        => 'Monthly Summary',
-        'daily_expenses' => 'Daily Expenses',
+        'daily_expenses' => 'Daily Disbursement',
         'daily_report'   => 'Daily Report',
     ];
 
@@ -76,6 +77,7 @@ class ReportExcelExporter
             'expenses'       => $this->expenseRows($data),
             'pcv'            => $this->pcvRows($data),
             'tasks'          => $this->taskRows($data),
+            'billing'        => $this->billingRows($data),
             'productivity'   => $this->productivityRows($data),
             'monthly'        => $this->monthlyRows($data),
             'daily_expenses' => $this->dailyExpensesRows($data),
@@ -480,5 +482,42 @@ class ReportExcelExporter
     private function columnLetter(int $columnIndex): string
     {
         return \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($columnIndex);
+    }
+
+    private function billingRows(array $data): array
+    {
+        $body = [];
+        $totalAmount = 0.0;
+        $totalDeposit = 0.0;
+        $totalBalance = 0.0;
+
+        foreach ($data['tasks'] as $task) {
+            $amount = (float) $task->amount;
+            $deposit = (float) $task->receipts->sum('cash_received');
+            $balance = (float) $task->balance;
+
+            $totalAmount += $amount;
+            $totalDeposit += $deposit;
+            $totalBalance += $balance;
+
+            $body[] = [
+                $this->excelDate($task->created_at),
+                $task->task_id,
+                $task->customer_name,
+                $task->contact_number ?? '—',
+                $amount,
+                $deposit,
+                $balance,
+                $task->payment_status,
+            ];
+        }
+
+        return [
+            'headers'      => ['Date', 'Billing ID', 'Customer', 'Contact', 'Total', 'Deposit', 'Balance', 'Status'],
+            'body'         => $body,
+            'moneyColumns' => [5, 6, 7],
+            'dateColumns'  => [1],
+            'totalRow'     => ['TOTAL', '', '', '', $totalAmount, $totalDeposit, $totalBalance, ''],
+        ];
     }
 }

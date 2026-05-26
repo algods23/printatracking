@@ -51,6 +51,7 @@ class PcvController extends Controller
             $validated['voucher_path'] = $request->file('voucher')->store('pcv', 'public');
         }
 
+        $validated['pcv_number'] = $this->nextPcvNumber();
         $validated['recorded_by'] = Auth::id();
 
         $pcv = Pcv::create($validated);
@@ -134,5 +135,20 @@ class PcvController extends Controller
         $pcv->delete();
 
         return redirect()->route('pcv.index')->with('success', 'PCV deleted successfully');
+    }
+
+    private function nextPcvNumber(): string
+    {
+        $lastNumber = Pcv::whereNotNull('pcv_number')
+            ->orderByDesc('id')
+            ->value('pcv_number');
+
+        $next = 1;
+
+        if (is_string($lastNumber) && preg_match('/(\d+)$/', $lastNumber, $matches)) {
+            $next = ((int) $matches[1]) + 1;
+        }
+
+        return 'PCV # ' . str_pad((string) $next, 2, '0', STR_PAD_LEFT);
     }
 }

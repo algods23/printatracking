@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Expense')
-@section('page-title', 'Edit Expense')
-@section('page-subtitle', 'Update an existing business expense')
+@section('title', 'Edit Disbursement')
+@section('page-title', 'Edit Disbursement')
+@section('page-subtitle', 'Update an existing business disbursement')
 
 @section('content')
 <div class="max-w-2xl mx-auto">
@@ -17,7 +17,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label for="expense_name" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Expense Name *</label>
+                    <label for="expense_name" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Name *</label>
                     <input type="text" id="expense_name" name="expense_name" value="{{ old('expense_name', $expense->expense_name) }}" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('expense_name') border-red-500 @enderror">
                     @error('expense_name')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -100,7 +100,7 @@
             <div class="flex gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button type="submit" class="flex-1 px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
                     <i data-lucide="check" class="w-5 h-5"></i>
-                    Update Expense
+                    Update Disbursement
                 </button>
                 <a href="{{ route('expenses.show', $expense) }}" class="flex-1 px-6 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2">
                     <i data-lucide="x" class="w-5 h-5"></i>

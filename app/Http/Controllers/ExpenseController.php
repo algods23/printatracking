@@ -35,7 +35,9 @@ class ExpenseController extends Controller
 
     public function create()
     {
-        return view('expenses.create');
+        return view('expenses.create', [
+            'nextExpenseNumber' => $this->nextExpenseNumber(),
+        ]);
     }
 
     public function store(Request $request)
@@ -59,6 +61,7 @@ class ExpenseController extends Controller
             $validated['receipt_path'] = $request->file('receipt')->store('expenses', 'public');
         }
 
+        $validated['expense_number'] = $this->nextExpenseNumber();
         $validated['recorded_by'] = Auth::id();
 
         $expense = Expense::create($validated);
@@ -165,5 +168,20 @@ class ExpenseController extends Controller
         $categoryBreakdown = $expenses->groupBy('category')->map(fn($group) => $group->sum('amount'));
 
         return view('expenses.report', compact('expenses', 'totalAmount', 'categoryBreakdown'));
+    }
+
+    private function nextExpenseNumber(): string
+    {
+        $lastNumber = Expense::whereNotNull('expense_number')
+            ->orderByDesc('id')
+            ->value('expense_number');
+
+        $next = 1;
+
+        if (is_string($lastNumber) && preg_match('/(\d+)$/', $lastNumber, $matches)) {
+            $next = ((int) $matches[1]) + 1;
+        }
+
+        return 'Disbursement # ' . str_pad((string) $next, 2, '0', STR_PAD_LEFT);
     }
 }

@@ -4,7 +4,7 @@
         <p class="text-2xl font-bold text-green-600 dark:text-green-400">&#8369;{{ number_format($totalSales, 2) }}</p>
     </div>
     <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-        <p class="text-sm text-gray-500 dark:text-gray-400">Total expenses</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Total disbursement</p>
         <p class="text-2xl font-bold text-red-600 dark:text-red-400">&#8369;{{ number_format($totalExpenses, 2) }}</p>
     </div>
     <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -23,7 +23,7 @@
             <tr>
                 <th class="px-4 py-3 text-left font-semibold">Month</th>
                 <th class="px-4 py-3 text-left font-semibold">Sales</th>
-                <th class="px-4 py-3 text-left font-semibold">Expenses</th>
+                <th class="px-4 py-3 text-left font-semibold">Disbursement</th>
                 <th class="px-4 py-3 text-left font-semibold">PCV</th>
                 <th class="px-4 py-3 text-left font-semibold">Total</th>
             </tr>

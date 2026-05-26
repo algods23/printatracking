@@ -31,7 +31,7 @@
             </div>
             <div>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Payment Method</p>
-                <p class="font-semibold text-gray-900 dark:text-white">{{ $receipt->payment_method }}</p>
+                <p class="font-semibold text-gray-900 dark:text-white">{{ $receipt->display_payment_method }}</p>
                 @if($receipt->payment_reference)
                     <p class="text-sm text-gray-500 dark:text-gray-400">Ref: {{ $receipt->payment_reference }}</p>
                 @endif

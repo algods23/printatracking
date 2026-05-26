@@ -101,6 +101,7 @@ class Task extends Model
             'cash_received'     => $paymentAmount,
             'change'            => 0,
             'payment_method'    => $mappedMethod,
+            'payment_channel'   => $paymentMethod,
             'payment_reference' => $mappedMethod === 'Cash' ? null : $reference,
             'notes'             => null,
             'issued_by'         => $issuedBy,

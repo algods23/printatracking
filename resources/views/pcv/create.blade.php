@@ -16,7 +16,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label for="pcv_name" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">PCV Name *</label>
+                    <label for="pcv_name" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Name *</label>
                     <input type="text" id="pcv_name" name="pcv_name" value="{{ old('pcv_name') }}" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('pcv_name') border-red-500 @enderror">
                     @error('pcv_name')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>

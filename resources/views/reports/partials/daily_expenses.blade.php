@@ -1,10 +1,10 @@
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
     <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-        <p class="text-sm text-gray-500 dark:text-gray-400">Total Expenses</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Total Disbursement</p>
         <p class="text-2xl font-bold text-red-600 dark:text-red-400">&#8369;{{ number_format($totalExpenses, 2) }}</p>
     </div>
     <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-        <p class="text-sm text-gray-500 dark:text-gray-400">Days with Expenses</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Days with Disbursement</p>
         <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ count($dailySummary) }}</p>
     </div>
 </div>
@@ -54,7 +54,7 @@
                         <table class="w-full text-xs">
                             <thead class="bg-gray-100/50 dark:bg-gray-900/50 text-gray-600 dark:text-gray-400">
                                 <tr>
-                                    <th class="px-4 py-2 text-left font-semibold">Expense Name</th>
+                                    <th class="px-4 py-2 text-left font-semibold">Disbursement Name</th>
                                     <th class="px-4 py-2 text-left font-semibold">Category</th>
                                     <th class="px-4 py-2 text-left font-semibold">Recorded By</th>
                                     <th class="px-4 py-2 text-right font-semibold">Amount</th>

@@ -1,27 +1,33 @@
 @extends('layouts.app')
 
-@section('title', 'Expense Details')
-@section('page-title', 'Expense Details')
-@section('page-subtitle', 'Review a recorded expense')
+@section('title', 'Disbursement Details')
+@section('page-title', 'Disbursement Details')
+@section('page-subtitle', 'Review a recorded disbursement')
 
 @section('content')
 <div class="max-w-4xl mx-auto space-y-6">
     <div class="flex items-center justify-between gap-4">
         <div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $expense->expense_name }}</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ $expense->display_expense_number }}</p>
             <p class="text-sm text-gray-500 dark:text-gray-400">Recorded on {{ $expense->date->format('M d, Y') }}</p>
         </div>
         <a href="{{ route('expenses.index') }}" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-            Back to Expenses
+            Back to Disbursement
         </a>
     </div>
 
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Expense Information</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Disbursement Information</h3>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+            <div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Disbursement #</p>
+                <p class="text-base font-medium text-gray-900 dark:text-white">{{ $expense->display_expense_number }}</p>
+            </div>
+
             <div>
                 <p class="text-sm text-gray-500 dark:text-gray-400">Category</p>
                 <p class="text-base font-medium text-gray-900 dark:text-white">{{ $expense->category === 'Other' && $expense->other_category ? $expense->other_category : $expense->category }}</p>

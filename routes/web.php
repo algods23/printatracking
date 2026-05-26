@@ -22,6 +22,7 @@ Route::middleware('auth')->group(function () {
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::post('/dashboard/unlock', [DashboardController::class, 'unlock'])->name('dashboard.unlock');
 
     // Tasks
     Route::get('/tasks/search', [TaskController::class, 'search'])->name('tasks.search');
@@ -64,9 +65,9 @@ Route::middleware('auth')->group(function () {
         Route::put('/settings/users/{user}', [SettingController::class, 'updateUser'])->name('settings.update-user');
         Route::delete('/settings/users/{user}', [SettingController::class, 'deleteUser'])->name('settings.delete-user');
 
-        // Quotation
-        Route::get('/quotation', [QuotationController::class, 'index'])->name('quotation.index');
-        Route::get('/quotation/download', [QuotationController::class, 'download'])->name('quotation.download');
+        // Billing
+        Route::get('/billing', [QuotationController::class, 'index'])->name('billing.index');
+        Route::get('/billing/download', [QuotationController::class, 'download'])->name('billing.download');
         
         Route::post('/settings/backup', [SettingController::class, 'backup'])->name('settings.backup');
         Route::post('/settings/restore', [SettingController::class, 'restore'])->name('settings.restore');
