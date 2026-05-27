@@ -1,10 +1,14 @@
 param(
-    [string]$StageDir = "desktop\build\laravel-app"
+    [string]$StageDir = "desktop-stage-laravel-app-current"
 )
 
 $ErrorActionPreference = "Stop"
 $root = Resolve-Path (Join-Path $PSScriptRoot "..")
-$stage = Join-Path $root $StageDir
+$stage = if ([System.IO.Path]::IsPathRooted($StageDir)) {
+    $StageDir
+} else {
+    Join-Path $root $StageDir
+}
 
 if (Test-Path $stage) {
     Remove-Item -LiteralPath $stage -Recurse -Force

@@ -49,7 +49,7 @@
         ],
         "extraResources": [
             {
-                "from": "desktop/build/laravel-app",
+                "from": "desktop-stage-laravel-app-current",
                 "to": "laravel-app"
             },
             {

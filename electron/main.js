@@ -52,7 +52,7 @@ const startLaravelServer = () => {
     const laravelPath = path.join(__dirname, '../');
     const phpPath = process.platform === 'win32' ? 'php' : 'php';
     
-    phpProcess = spawn(phpPath, ['artisan', 'serve', '--host=127.0.0.1', '--port=8000'], {
+    phpProcess = spawn(phpPath, ['artisan', 'serve', '--host=0.0.0.0', '--port=8000'], {
         cwd: laravelPath,
         stdio: 'pipe',
         detached: false,
