@@ -108,7 +108,7 @@ class ReportExcelExporter
                 $receipt->receipt_number,
                 $receipt->task?->task_id ?? '—',
                 $receipt->customer_name,
-                $receipt->payment_method,
+                $receipt->display_payment_method,
                 $amount,
                 $this->excelDate($receipt->created_at),
             ];
@@ -120,6 +120,7 @@ class ReportExcelExporter
             'moneyColumns' => [5],
             'dateColumns'  => [6],
             'totalRow'     => ['', '', '', 'TOTAL', $totalAmount, ''],
+            'paymentMethodBreakdown' => $this->paymentMethodBreakdownRows($data['paymentMethodBreakdown'] ?? []),
         ];
     }
 
@@ -236,6 +237,7 @@ class ReportExcelExporter
                 (float) $data['totalPcv'],
                 (float) $data['netProfit'],
             ],
+            'paymentMethodBreakdown' => $this->paymentMethodBreakdownRows($data['paymentMethodBreakdown'] ?? []),
         ];
     }
 
@@ -266,7 +268,7 @@ class ReportExcelExporter
     }
 
     /**
-     * @param array{headers: string[], body: array<int, array>, moneyColumns: int[], dateColumns: int[], totalRow: array|null, percentColumns?: int[]} $config
+     * @param array{headers: string[], body: array<int, array>, moneyColumns: int[], dateColumns: int[], totalRow: array|null, percentColumns?: int[], paymentMethodBreakdown?: array<int, array{0: string, 1: float}>} $config
      */
     private function populateSheet(Worksheet $sheet, array $config): void
     {
@@ -311,6 +313,58 @@ class ReportExcelExporter
             $dateColumns,
             $percentColumns
         );
+
+        $paymentMethodBreakdown = $config['paymentMethodBreakdown'] ?? [];
+        if (!empty($paymentMethodBreakdown)) {
+            $summaryStartRow = ($totalRowIndex ?? $dataEndRow) + 2;
+            $this->appendPaymentMethodBreakdown($sheet, $summaryStartRow, $paymentMethodBreakdown);
+        }
+    }
+
+    private function appendPaymentMethodBreakdown(Worksheet $sheet, int $startRow, array $breakdownRows): void
+    {
+        $sheet->setCellValue("A{$startRow}", 'Sales by payment method');
+        $sheet->mergeCells("A{$startRow}:B{$startRow}");
+        $sheet->getStyle("A{$startRow}:B{$startRow}")->applyFromArray([
+            'font' => ['bold' => true],
+            'fill' => [
+                'fillType'   => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'E8EEF9'],
+            ],
+        ]);
+
+        $headerRow = $startRow + 1;
+        $sheet->setCellValue("A{$headerRow}", 'Method');
+        $sheet->setCellValue("B{$headerRow}", 'Amount');
+        $sheet->getStyle("A{$headerRow}:B{$headerRow}")->applyFromArray([
+            'font' => ['bold' => true],
+            'fill' => [
+                'fillType'   => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'D9E1F2'],
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color'       => ['rgb' => 'B0B0B0'],
+                ],
+            ],
+        ]);
+
+        $rowIndex = $headerRow + 1;
+        foreach ($breakdownRows as [$method, $amount]) {
+            $sheet->setCellValue("A{$rowIndex}", $method);
+            $sheet->setCellValue("B{$rowIndex}", $amount);
+            $sheet->getStyle("A{$rowIndex}:B{$rowIndex}")->applyFromArray([
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color'       => ['rgb' => 'B0B0B0'],
+                    ],
+                ],
+            ]);
+            $sheet->getStyle("B{$rowIndex}")->getNumberFormat()->setFormatCode('#,##0.00');
+            $rowIndex++;
+        }
     }
 
     private function applyFormatting(
@@ -467,7 +521,19 @@ class ReportExcelExporter
                 (float) $data['totalExpenses'],
                 (float) $data['netProfit'],
             ],
+            'paymentMethodBreakdown' => $this->paymentMethodBreakdownRows($data['paymentMethodBreakdown'] ?? []),
         ];
+    }
+
+    private function paymentMethodBreakdownRows(iterable $breakdown): array
+    {
+        $rows = [];
+
+        foreach ($breakdown as $method => $amount) {
+            $rows[] = [$method, (float) $amount];
+        }
+
+        return $rows;
     }
 
     private function excelDate(Carbon|\DateTimeInterface|string $value): float

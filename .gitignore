@@ -20,6 +20,7 @@
 /storage/pail
 /vendor
 /desktop/build
+/desktop-stage-laravel-app-current/
 /desktop/runtime/*
 !/desktop/runtime/README.md
 /dist

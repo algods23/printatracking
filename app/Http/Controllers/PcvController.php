@@ -6,6 +6,7 @@ use App\Models\ActivityLog;
 use App\Models\Pcv;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
@@ -51,7 +52,10 @@ class PcvController extends Controller
             $validated['voucher_path'] = $request->file('voucher')->store('pcv', 'public');
         }
 
-        $validated['pcv_number'] = $this->nextPcvNumber();
+        if (Schema::hasColumn('pcvs', 'pcv_number')) {
+            $validated['pcv_number'] = $this->nextPcvNumber();
+        }
+
         $validated['recorded_by'] = Auth::id();
 
         $pcv = Pcv::create($validated);
@@ -142,6 +146,12 @@ class PcvController extends Controller
 
     private function nextPcvNumber(): string
     {
+        if (! Schema::hasColumn('pcvs', 'pcv_number')) {
+            $nextId = ((int) Pcv::max('id')) + 1;
+
+            return 'PCV # ' . str_pad((string) $nextId, 2, '0', STR_PAD_LEFT);
+        }
+
         $lastNumber = Pcv::whereNotNull('pcv_number')
             ->orderByDesc('id')
             ->value('pcv_number');

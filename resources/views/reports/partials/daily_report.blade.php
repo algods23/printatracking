@@ -13,6 +13,17 @@
     </div>
 </div>
 
+@if($paymentMethodBreakdown->isNotEmpty())
+    <div class="mb-6">
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Sales by payment method</h3>
+        <div class="flex flex-wrap gap-2">
+            @foreach($paymentMethodBreakdown as $method => $amount)
+                <span class="px-3 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-sm">{{ $method }}: &#8369;{{ number_format($amount, 2) }}</span>
+            @endforeach
+        </div>
+    </div>
+@endif
+
 <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
     <table class="w-full text-sm">
         <thead class="bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300">

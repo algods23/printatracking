@@ -15,9 +15,6 @@ return new class extends Migration
         }
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         if (Schema::hasColumn('pcvs', 'pcv_number')) {

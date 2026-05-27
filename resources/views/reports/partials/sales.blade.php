@@ -46,7 +46,7 @@
                     <td class="px-4 py-3 text-gray-900 dark:text-white">{{ $receipt->receipt_number }}</td>
                     <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $receipt->task?->task_id ?? '—' }}</td>
                     <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $receipt->customer_name }}</td>
-                    <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $receipt->payment_method }}</td>
+                    <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $receipt->display_payment_method }}</td>
                     <td class="px-4 py-3 font-semibold text-green-600 dark:text-green-400">&#8369;{{ number_format($receipt->cash_received, 2) }}</td>
                     <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $receipt->created_at->format('M d, Y') }}</td>
                 </tr>

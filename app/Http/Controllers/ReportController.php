@@ -160,7 +160,7 @@ class ReportController extends Controller
             'totalSales'             => $receipts->sum('cash_received'),
             'totalDiscount'          => $receipts->sum('discount'),
             'totalTax'               => $receipts->sum('tax'),
-            'paymentMethodBreakdown' => $receipts->groupBy('payment_method')->map(fn ($g) => $g->sum('cash_received')),
+            'paymentMethodBreakdown' => $this->paymentMethodBreakdown($receipts),
         ];
     }
 
@@ -288,6 +288,9 @@ class ReportController extends Controller
             'totalExpenses' => $totalExpenses,
             'totalPcv'      => $totalPcv,
             'netProfit'     => $totalSales - $totalExpenses - $totalPcv,
+            'paymentMethodBreakdown' => $this->paymentMethodBreakdown(
+                Receipt::whereBetween('created_at', [$rangeStart, $rangeEnd])->get()
+            ),
         ];
     }
 
@@ -361,7 +364,17 @@ class ReportController extends Controller
             'totalSales'    => $totalSales,
             'totalExpenses' => $totalExpenses,
             'netProfit'     => $totalSales - $totalExpenses,
+            'paymentMethodBreakdown' => $this->paymentMethodBreakdown(
+                Receipt::whereBetween('created_at', [$rangeStart, $rangeEnd])->get()
+            ),
         ];
+    }
+
+    private function paymentMethodBreakdown($receipts)
+    {
+        return $receipts
+            ->groupBy(fn ($receipt) => $receipt->display_payment_method)
+            ->map(fn ($group) => $group->sum('cash_received'));
     }
 
     private function billingData(string $startDate, string $endDate): array
