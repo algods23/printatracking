@@ -23,30 +23,37 @@
 
         /* ── COMPANY HEADER ── */
         .header-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
             background: #d4af37;
-            padding: 10px 16px;
-            gap: 16px;
-            min-height: 80px;
+            padding: 8px 16px;
+        }
+
+        .header-layout {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .header-layout td {
+            padding: 0;
+            border: 0;
+            vertical-align: middle;
         }
 
         .header-logo {
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
+            width: 255px;
+            text-align: left;
         }
 
         .header-logo img {
-            max-height: 100px;
-            max-width: 160px;
+            display: block;
+            max-height: 93px;
+            max-width: 255px;
             object-fit: contain;
         }
 
         .header-company {
-            flex: 1;
             text-align: right;
+            padding: 0;
+            margin: 0;
         }
 
         .header-company .name {
@@ -206,6 +213,26 @@
             margin-bottom: 4px;
         }
 
+        .summary-layout {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .summary-layout td {
+            padding: 0;
+            border: 0;
+            vertical-align: top;
+        }
+
+        .summary-layout .summary-left {
+            text-align: left;
+        }
+
+        .summary-layout .summary-right {
+            width: 280px;
+            text-align: right;
+        }
+
         .totals-table {
             width: 280px;
             border-collapse: collapse;
@@ -234,20 +261,11 @@
             color: #000;
         }
 
-        /* ── PAYMENT SECTION ── */
-        .payment-section {
-            padding: 0 12px;
-            margin-top: 8px;
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-        }
-
         .payment-instructions {
             width: 240px;
             flex-shrink: 0;
             border: 1px dashed #999;
-            padding: 10px;
+            padding: 8px 10px;
             background: #fffdf0;
             font-size: 9px;
             line-height: 1.4;
@@ -321,14 +339,18 @@
 
         <!-- HEADER: LOGO LEFT | COMPANY DETAILS RIGHT -->
         <div class="header-top">
-            <div class="header-logo">
-                <img src="{{ $logoDataUri }}" alt="Logo">
-            </div>
-            <div class="header-company">
-                <div class="name">Printa Signages &amp; Stickers</div>
-                <div class="address">Kumintang St., Mintal, Davao City</div>
-                <div class="address">09667550044</div>
-            </div>
+            <table class="header-layout">
+                <tr>
+                    <td class="header-logo">
+                        <img src="{{ $logoDataUri }}" alt="Logo">
+                    </td>
+                    <td class="header-company">
+                        <div class="name">Printa Signages &amp; Stickers</div>
+                        <div class="address">Kumintang St., Mintal, Davao City</div>
+                        <div class="address">09667550044</div>
+                    </td>
+                </tr>
+            </table>
         </div>
 
         <!-- BILLING STATEMENT TITLE -->
@@ -417,36 +439,40 @@
             </table>
         </div>
 
-        <!-- SUBTOTAL & TOTAL -->
+        <!-- PAYMENT INSTRUCTIONS + SUBTOTAL & TOTAL -->
         <div class="totals-section">
-            <table class="totals-table">
-                <tr class="subtotal">
-                    <td>Subtotal</td>
-                    <td>{{ number_format($totalAmount, 2) }}</td>
-                </tr>
-                <tr class="subtotal">
-                    <td>Deposit</td>
-                    <td>{{ number_format($totalDeposit, 2) }}</td>
-                </tr>
-                <tr class="subtotal">
-                    <td>Balance</td>
-                    <td>{{ number_format($totalBalance, 2) }}</td>
-                </tr>
-                <tr class="total-due">
-                    <td>TOTAL AMOUNT DUE</td>
-                    <td>{{ number_format($totalAmount, 2) }}</td>
+            <table class="summary-layout">
+                <tr>
+                    <td class="summary-left">
+                        <div class="payment-instructions">
+                            <div class="pi-title">Payment Instructions</div>
+                            <div>Please make check payable to:</div>
+                            <div class="pi-name">KRISTINE PANTASTICO</div>
+                            <div>Kindly send proof of payment for verification. Thank you!</div>
+                        </div>
+                    </td>
+                    <td class="summary-right">
+                        <table class="totals-table">
+                            <tr class="subtotal">
+                                <td>Subtotal</td>
+                                <td>{{ number_format($totalAmount, 2) }}</td>
+                            </tr>
+                            <tr class="subtotal">
+                                <td>Deposit</td>
+                                <td>{{ number_format($totalDeposit, 2) }}</td>
+                            </tr>
+                            <tr class="subtotal">
+                                <td>Balance</td>
+                                <td>{{ number_format($totalBalance, 2) }}</td>
+                            </tr>
+                            <tr class="total-due">
+                                <td>TOTAL AMOUNT DUE</td>
+                                <td>{{ number_format($totalAmount, 2) }}</td>
+                            </tr>
+                        </table>
+                    </td>
                 </tr>
             </table>
-        </div>
-
-        <!-- PAYMENT INSTRUCTIONS -->
-        <div class="payment-section">
-            <div class="payment-instructions">
-                <div class="pi-title">Payment Instructions</div>
-                <div>Please make check payable to:</div>
-                <div class="pi-name">KRISTINE PANTASTICO</div>
-                <div>Kindly send proof of payment for verification. Thank you!</div>
-            </div>
         </div>
 
         <!-- NOTE BANNER -->
@@ -461,7 +487,6 @@
                 <span class="company-name">Printa Signages &amp; Stickers</span>
             </div>
             <div class="footer-right">
-                <div>Signature:</div>
                 <div class="sig-name">{{ $authRep ?? 'Jelian Fernandez' }}</div>
                 <div class="sig-title">Authorized Representative</div>
             </div>
