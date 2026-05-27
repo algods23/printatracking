@@ -20,7 +20,10 @@
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Receipt</h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400">{{ $receipt->created_at->format('M d, Y - h:i A') }}</p>
             </div>
-            <a href="{{ route('tasks.show', $task) }}" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors text-sm">Back to Task</a>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('receipts.edit', $receipt) }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-sm">Edit Receipt</a>
+                <a href="{{ route('tasks.show', $task) }}" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors text-sm">Back to Task</a>
+            </div>
         </div>
 
         <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -411,6 +411,10 @@ class TaskController extends Controller
             $query->where('priority', $request->priority);
         }
 
+        if ($request->created_date) {
+            $query->whereDate('created_at', $request->created_date);
+        }
+
         if (! $showArchived && $request->payment_status) {
             $query->where('payment_status', $request->payment_status);
         }

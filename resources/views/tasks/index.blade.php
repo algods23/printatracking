@@ -17,51 +17,64 @@
 @endif
 
 <!-- Search & Filter Bar -->
-<form id="taskFiltersForm" action="{{ route('tasks.index') }}" method="GET" class="mb-6 flex items-end gap-3 flex-wrap">
-    <div class="flex-1 min-w-[200px]">
-        <div class="flex gap-2">
-            <input type="text" name="q" value="{{ $query ?? request('q') }}" placeholder="Search by task ID, customer name, or phone..." class="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
-            <button type="submit" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors text-sm">Search</button>
+<form id="taskFiltersForm" action="{{ route('tasks.index') }}" method="GET" class="mb-6 flex flex-col gap-3">
+    <div class="flex items-end gap-3 flex-wrap">
+        <div class="flex-1 min-w-[200px]">
+            <div class="flex gap-2">
+                <input type="text" name="q" value="{{ $query ?? request('q') }}" placeholder="Search by task ID, customer name, or phone..." class="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+                <button type="submit" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors text-sm">Search</button>
+            </div>
         </div>
-    </div>
-    <select onchange="filterTasks()" id="statusFilter" name="status" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
-        <option value="">All Status</option>
-        @if($isArchived)
-            <option value="Received">Received</option>
-            <option value="Cancelled">Cancelled</option>
-        @else
-            <option value="Pending">Pending</option>
-            <option value="Completed">Completed</option>
-            <option value="Received">Received</option>
-        @endif
-    </select>
-    <select onchange="filterTasks()" id="priorityFilter" name="priority" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
-        <option value="">All Priority</option>
-        <option value="Low">Low</option>
-        <option value="Urgent">Urgent</option>
-    </select>
-    <input type="hidden" id="archivedFilter" name="archived" value="{{ request()->boolean('archived') ? '1' : '' }}">
-    <input type="hidden" id="paymentStatusFilter" name="payment_status" value="{{ request('payment_status') }}">
-    <div>
-        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Due From</label>
-        <input type="date" id="dueDateFrom" name="due_date_from" onchange="filterTasks()" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
-    </div>
-    <div>
-        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Due To</label>
-        <input type="date" id="dueDateTo" name="due_date_to" onchange="filterTasks()" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
-    </div>
-    <button type="button" onclick="clearFilters()" class="px-3 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors text-sm">
-        Clear
-    </button>
-    @unless($isArchived)
-        <button type="button" onclick="showArchived()" class="px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg transition-colors text-sm">
-            Archived
+        <select onchange="filterTasks()" id="priorityFilter" name="priority" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+            <option value="">All Priority</option>
+            <option value="Low">Low</option>
+            <option value="Urgent">Urgent</option>
+        </select>
+        <div>
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Due From</label>
+            <input type="date" id="dueDateFrom" name="due_date_from" onchange="filterTasks()" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Due To</label>
+            <input type="date" id="dueDateTo" name="due_date_to" onchange="filterTasks()" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+        </div>
+        <button type="button" onclick="clearFilters()" class="px-3 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors text-sm">
+            Clear
         </button>
-        <a href="{{ route('tasks.create') }}" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors flex items-center gap-2 text-sm">
-            <i data-lucide="plus" class="w-4 h-4"></i>
-            New Task
-        </a>
-    @endunless
+        <input type="hidden" id="archivedFilter" name="archived" value="{{ request()->boolean('archived') ? '1' : '' }}">
+        @unless($isArchived)
+            <button type="button" onclick="showArchived()" class="px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg transition-colors text-sm">
+                Archived
+            </button>
+            <a href="{{ route('tasks.create') }}" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors flex items-center gap-2 text-sm">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                New Task
+            </a>
+        @endunless
+    </div>
+    <div class="flex items-end gap-3 flex-wrap">
+        <select onchange="filterTasks()" id="statusFilter" name="status" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+            <option value="">All Status</option>
+            @if($isArchived)
+                <option value="Received">Received</option>
+                <option value="Cancelled">Cancelled</option>
+            @else
+                <option value="Pending">Pending</option>
+                <option value="Completed">Completed</option>
+                <option value="Received">Received</option>
+            @endif
+        </select>
+        <div>
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Created Date</label>
+            <input type="date" id="createdDateFilter" name="created_date" onchange="filterTasks()" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+        </div>
+        <select onchange="filterTasks()" id="paymentStatusFilter" name="payment_status" class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+            <option value="">All Payment Status</option>
+            <option value="Paid">Paid</option>
+            <option value="Partial">Partial</option>
+            <option value="Unpaid">Unpaid</option>
+        </select>
+    </div>
 </form>
 
 <!-- Tasks Table -->
@@ -285,6 +298,7 @@
         if (params.get('status')) document.getElementById('statusFilter').value = params.get('status');
         if (params.get('priority')) document.getElementById('priorityFilter').value = params.get('priority');
         if (params.get('archived') === '1') document.getElementById('archivedFilter').value = '1';
+        if (params.get('created_date')) document.getElementById('createdDateFilter').value = params.get('created_date');
         if (params.get('payment_status')) document.getElementById('paymentStatusFilter').value = params.get('payment_status');
         if (params.get('due_date_from')) document.getElementById('dueDateFrom').value = params.get('due_date_from');
         if (params.get('due_date_to')) document.getElementById('dueDateTo').value = params.get('due_date_to');

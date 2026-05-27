@@ -143,7 +143,6 @@ class ReceiptController extends Controller
     public function update(Request $request, Receipt $receipt)
     {
         $validated = $request->validate([
-            'task_id' => 'required|exists:tasks,id',
             'payment_amount' => 'required|numeric|min:0.01',
             'payment_method' => 'required|in:Cash,Card,Check,Bank Transfer,GCash,Maya,Credit Card,Other',
             'payment_reference' => 'required_unless:payment_method,Cash|nullable|string|max:100',
@@ -153,9 +152,9 @@ class ReceiptController extends Controller
         $normalizedMethod = $this->normalizePaymentMethod($validated['payment_method']);
 
         DB::transaction(function () use ($validated, $receipt, $normalizedMethod) {
-            $task = Task::withSum('receipts as paid_amount', 'cash_received')
+            $task = $receipt->task()->withSum('receipts as paid_amount', 'cash_received')
                 ->lockForUpdate()
-                ->findOrFail($validated['task_id']);
+                ->firstOrFail();
 
             $paidWithoutReceipt = (float) $task->receipts()
                 ->whereKeyNot($receipt->id)
