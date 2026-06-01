@@ -1,4 +1,4 @@
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+<div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
     <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
         <p class="text-sm text-gray-500 dark:text-gray-400">Total Sales</p>
         <p class="text-2xl font-bold text-green-600 dark:text-green-400">&#8369;{{ number_format($totalSales, 2) }}</p>
@@ -10,6 +10,14 @@
     <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
         <p class="text-sm text-gray-500 dark:text-gray-400">Net Profit</p>
         <p class="text-2xl font-bold {{ $netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">&#8369;{{ number_format($netProfit, 2) }}</p>
+    </div>
+    <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Cash on hand</p>
+        @php
+            $cashOnly = $paymentMethodBreakdown['Cash'] ?? 0;
+            $cashOnHand = $cashOnly - $totalExpenses;
+        @endphp
+        <p class="text-2xl font-bold {{ $cashOnHand >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">&#8369;{{ number_format($cashOnHand, 2) }}</p>
     </div>
 </div>
 
