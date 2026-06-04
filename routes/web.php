@@ -30,6 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/tasks/{task}/status', [TaskController::class, 'updateStatus'])->name('tasks.status');
     Route::post('/tasks/{task}/receive', [TaskController::class, 'markReceived'])->name('tasks.receive');
     Route::get('/tasks/{task}/job-order-print', [TaskController::class, 'printJobOrder'])->name('tasks.job-order-print');
+    Route::get('/tasks/{task}/job-order-pdf', [TaskController::class, 'downloadJobOrderPdf'])->name('tasks.job-order-pdf');
     Route::resource('tasks', TaskController::class);
 
     // Receipts

@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+@php
+    $isPdf = $isPdf ?? false;
+    $copyMode = $copyMode ?? 'both';
+@endphp
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -310,17 +314,21 @@
 </head>
 <body>
 <div class="sheet">
+    @unless($isPdf)
     <div class="copy-label">COMPANY COPY</div>
+    @endunless
+    @unless($isPdf)
     <div class="no-print">
         <button type="button" onclick="window.print()">Print</button>
-        <button type="button" onclick="saveSingleCopy()">Save as PDF</button>
+        <a href="{{ route('tasks.job-order-pdf', $task) }}">Save as PDF</a>
         <a href="{{ route('tasks.show', $task) }}" class="secondary">Back to task</a>
     </div>
+    @endunless
 
     <div class="header-row">
         <div class="logo-block">
-            @if(!empty($logoPath))
-                <img src="{{ asset('storage/'.$logoPath) }}" alt="" style="max-height:0.24in;max-width:0.7in;">
+            @if(!empty($logoSrc))
+                <img src="{{ $logoSrc }}" alt="" style="max-height:0.24in;max-width:0.7in;">
             @else
                 <div class="fallback-logo" aria-label="Printa Signages and Stickers">
                     <div class="logo-shapes" aria-hidden="true">
@@ -373,8 +381,8 @@
                 <tr>
                     <td class="desc">{{ $item ? $item->job_order : '' }}</td>
                     <td class="n">{{ $item ? $item->quantity : '' }}</td>
-                    <td class="money">{{ $item ? '₱'.number_format((float)$item->price, 2) : '' }}</td>
-                    <td class="money">{{ $item ? '₱'.number_format((float)$item->total, 2) : '' }}</td>
+                    <td class="money">{!! $item ? '&#8369;'.number_format((float)$item->price, 2) : '' !!}</td>
+                    <td class="money">{!! $item ? '&#8369;'.number_format((float)$item->total, 2) : '' !!}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -400,15 +408,15 @@
         <div class="totals-block">
             <div>
                 <span class="label">TOTAL :</span>
-                <span class="amount">₱{{ number_format($totalAmount, 2) }}</span>
+                <span class="amount">&#8369;{{ number_format($totalAmount, 2) }}</span>
             </div>
             <div>
                 <span class="label">DEPOSIT :</span>
-                <span class="amount">₱{{ number_format($paidAmount, 2) }}</span>
+                <span class="amount">&#8369;{{ number_format($paidAmount, 2) }}</span>
             </div>
             <div>
                 <span class="label">BALANCE :</span>
-                <span class="amount">₱{{ number_format($balance, 2) }}</span>
+                <span class="amount">&#8369;{{ number_format($balance, 2) }}</span>
             </div>
         </div>
     </div>
@@ -425,13 +433,14 @@
 </div>
 
 <!-- CUSTOMER COPY -->
+@if($copyMode === 'both')
 <div class="sheet">
     <div class="copy-label">CUSTOMER COPY</div>
 
     <div class="header-row">
         <div class="logo-block">
-            @if(!empty($logoPath))
-                <img src="{{ asset('storage/'.$logoPath) }}" alt="" style="max-height:0.24in;max-width:0.7in;">
+            @if(!empty($logoSrc))
+                <img src="{{ $logoSrc }}" alt="" style="max-height:0.24in;max-width:0.7in;">
             @else
                 <div class="fallback-logo" aria-label="Printa Signages and Stickers">
                     <div class="logo-shapes" aria-hidden="true">
@@ -484,8 +493,8 @@
                 <tr>
                     <td class="desc">{{ $item ? $item->job_order : '' }}</td>
                     <td class="n">{{ $item ? $item->quantity : '' }}</td>
-                    <td class="money">{{ $item ? '₱'.number_format((float)$item->price, 2) : '' }}</td>
-                    <td class="money">{{ $item ? '₱'.number_format((float)$item->total, 2) : '' }}</td>
+                    <td class="money">{!! $item ? '&#8369;'.number_format((float)$item->price, 2) : '' !!}</td>
+                    <td class="money">{!! $item ? '&#8369;'.number_format((float)$item->total, 2) : '' !!}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -511,15 +520,15 @@
         <div class="totals-block">
             <div>
                 <span class="label">TOTAL :</span>
-                <span class="amount">₱{{ number_format($totalAmount, 2) }}</span>
+                <span class="amount">&#8369;{{ number_format($totalAmount, 2) }}</span>
             </div>
             <div>
                 <span class="label">DEPOSIT :</span>
-                <span class="amount">₱{{ number_format($paidAmount, 2) }}</span>
+                <span class="amount">&#8369;{{ number_format($paidAmount, 2) }}</span>
             </div>
             <div>
                 <span class="label">BALANCE :</span>
-                <span class="amount">₱{{ number_format($balance, 2) }}</span>
+                <span class="amount">&#8369;{{ number_format($balance, 2) }}</span>
             </div>
         </div>
     </div>
@@ -533,23 +542,8 @@
             <div class="sig-line">{{ $printedBy }}</div>
         </div>
     </div>
+</div>
+@endif
 
 </body>
-<script>
-    function saveSingleCopy() {
-        // Hide the second copy (customer copy)
-        const sheets = document.querySelectorAll('.sheet');
-        const copyLabel = sheets[0].querySelector('.copy-label');
-        sheets[1].style.display = 'none';
-        copyLabel.style.display = 'none';
-        
-        // Trigger print dialog for save as PDF
-        setTimeout(() => {
-            window.print();
-            // Restore both copies and label after print
-            sheets[1].style.display = 'block';
-            copyLabel.style.display = 'block';
-        }, 100);
-    }
-</script>
 </html>

@@ -7,6 +7,7 @@ use App\Models\Receipt;
 use App\Models\User;
 use App\Models\ActivityLog;
 use App\Models\Setting;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -144,50 +145,22 @@ class TaskController extends Controller
     {
         $this->authorizeTaskAccess($task);
 
-        $task->load(['items', 'receipts']);
+        return view('tasks.print-job-order', $this->jobOrderPrintData($task));
+    }
 
-        $totalAmount = (float) $task->amount;
-        $paidAmount = (float) $task->receipts->sum('cash_received');
-        $balance = max($totalAmount - $paidAmount, 0);
+    public function downloadJobOrderPdf(Task $task)
+    {
+        $this->authorizeTaskAccess($task);
 
-        $printedBy = Auth::user()?->name ?? 'Staff';
+        $pdf = Pdf::loadView('tasks.print-job-order', array_merge(
+            $this->jobOrderPrintData($task),
+            [
+                'isPdf' => true,
+                'copyMode' => 'single',
+            ]
+        ))->setPaper('letter');
 
-        $methods = $task->receipts->pluck('payment_method')->filter()->unique();
-
-        $cashMethods = ['Cash', 'Card', 'Check'];
-        $gcashMethods = ['Bank Transfer', 'Other'];
-
-        $checkboxCash = $methods->contains(fn ($m) => in_array($m, $cashMethods, true));
-        $checkboxGcash = $methods->contains(fn ($m) => in_array($m, $gcashMethods, true));
-
-        if ($paidAmount > 0 && ! $checkboxCash && ! $checkboxGcash && $methods->isNotEmpty()) {
-            $checkboxCash = true;
-        }
-
-        $maxRows = 8;
-        $items = $task->items()->orderBy('id')->get();
-        $placeholders = collect(range(1, max(0, $maxRows - $items->count())))->map(fn () => null);
-        $tableRows = $items->concat($placeholders)->take($maxRows);
-
-        $companyName = Setting::get('company_name', 'PRINTA SIGNAGES');
-        $companyAddress = Setting::get('company_address', 'KUMINTANG ST., MINTAL, DAVAO CITY');
-        $companyPhone = Setting::get('company_phone', '09667550044');
-        $logoPath = Setting::get('company_logo');
-
-        return view('tasks.print-job-order', compact(
-            'task',
-            'totalAmount',
-            'paidAmount',
-            'balance',
-            'printedBy',
-            'checkboxCash',
-            'checkboxGcash',
-            'tableRows',
-            'companyName',
-            'companyAddress',
-            'companyPhone',
-            'logoPath'
-        ));
+        return $pdf->download("job-order-{$task->task_id}.pdf");
     }
 
     public function edit(Task $task)
@@ -451,5 +424,80 @@ class TaskController extends Controller
             ->orderBy('role')
             ->orderBy('name')
             ->get();
+    }
+
+    private function jobOrderPrintData(Task $task): array
+    {
+        $task->load(['items', 'receipts']);
+
+        $totalAmount = (float) $task->amount;
+        $paidAmount = (float) $task->receipts->sum('cash_received');
+        $balance = max($totalAmount - $paidAmount, 0);
+
+        $printedBy = Auth::user()?->name ?? 'Staff';
+
+        $methods = $task->receipts->pluck('payment_method')->filter()->unique();
+
+        $cashMethods = ['Cash', 'Card', 'Check'];
+        $gcashMethods = ['Bank Transfer', 'Other'];
+
+        $checkboxCash = $methods->contains(fn ($m) => in_array($m, $cashMethods, true));
+        $checkboxGcash = $methods->contains(fn ($m) => in_array($m, $gcashMethods, true));
+
+        if ($paidAmount > 0 && ! $checkboxCash && ! $checkboxGcash && $methods->isNotEmpty()) {
+            $checkboxCash = true;
+        }
+
+        $maxRows = 8;
+        $items = $task->items()->orderBy('id')->get();
+        $placeholders = collect(range(1, max(0, $maxRows - $items->count())))->map(fn () => null);
+        $tableRows = $items->concat($placeholders)->take($maxRows);
+
+        return [
+            'task' => $task,
+            'totalAmount' => $totalAmount,
+            'paidAmount' => $paidAmount,
+            'balance' => $balance,
+            'printedBy' => $printedBy,
+            'checkboxCash' => $checkboxCash,
+            'checkboxGcash' => $checkboxGcash,
+            'tableRows' => $tableRows,
+            'companyName' => Setting::get('company_name', 'PRINTA SIGNAGES'),
+            'companyAddress' => Setting::get('company_address', 'KUMINTANG ST., MINTAL, DAVAO CITY'),
+            'companyPhone' => Setting::get('company_phone', '09667550044'),
+            'logoPath' => Setting::get('company_logo'),
+            'logoSrc' => $this->jobOrderLogoSrc(Setting::get('company_logo')),
+            'isPdf' => false,
+            'copyMode' => 'both',
+        ];
+    }
+
+    private function jobOrderLogoSrc(?string $logoPath): ?string
+    {
+        $path = null;
+
+        if (! empty($logoPath)) {
+            $storagePath = storage_path('app/public/' . $logoPath);
+            $publicStoragePath = public_path('storage/' . $logoPath);
+
+            if (is_file($storagePath)) {
+                $path = $storagePath;
+            } elseif (is_file($publicStoragePath)) {
+                $path = $publicStoragePath;
+            }
+        }
+
+        if ($path === null) {
+            $defaultLogo = public_path('images/printa-3color.png');
+            $path = is_file($defaultLogo) ? $defaultLogo : null;
+        }
+
+        if ($path === null) {
+            return null;
+        }
+
+        $mime = mime_content_type($path) ?: 'image/png';
+
+        return 'data:' . $mime . ';base64,' . base64_encode((string) file_get_contents($path));
     }
 }
