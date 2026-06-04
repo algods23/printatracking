@@ -156,7 +156,7 @@ class TaskController extends Controller
             $this->jobOrderPrintData($task),
             [
                 'isPdf' => true,
-                'copyMode' => 'single',
+                'copyMode' => 'customer',
             ]
         ))->setPaper('letter');
 

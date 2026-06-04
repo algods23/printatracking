@@ -313,6 +313,7 @@
     </style>
 </head>
 <body>
+@if($copyMode !== 'customer')
 <div class="sheet">
     @unless($isPdf)
     <div class="copy-label">COMPANY COPY</div>
@@ -431,9 +432,10 @@
         </div>
     </div>
 </div>
+@endif
 
 <!-- CUSTOMER COPY -->
-@if($copyMode === 'both')
+@if(in_array($copyMode, ['both', 'customer'], true))
 <div class="sheet">
     <div class="copy-label">CUSTOMER COPY</div>
 
