@@ -176,7 +176,7 @@ class ReportController extends Controller
             'type'              => 'expenses',
             'expenses'          => $expenses,
             'totalExpenses'     => $expenses->sum('amount'),
-            'categoryBreakdown' => $expenses->groupBy('category')->map(fn ($g) => $g->sum('amount')),
+            'categoryBreakdown' => $expenses->groupBy(fn ($expense) => $expense->display_category)->map(fn ($g) => $g->sum('amount')),
         ];
     }
 
@@ -192,7 +192,7 @@ class ReportController extends Controller
             'type'           => 'pcv',
             'pcvs'           => $pcvs,
             'totalPcv'       => $pcvs->sum('amount'),
-            'categoryBreakdown' => $pcvs->groupBy(fn ($pcv) => $pcv->category === 'Other' && $pcv->other_category ? $pcv->other_category : $pcv->category)
+            'categoryBreakdown' => $pcvs->groupBy(fn ($pcv) => $pcv->display_category)
                 ->map(fn ($g) => $g->sum('amount')),
         ];
     }

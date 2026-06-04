@@ -64,7 +64,7 @@
                                 @foreach($day['items'] as $item)
                                     <tr>
                                         <td class="px-4 py-2 text-gray-950 dark:text-white font-medium">{{ $item->expense_name }}</td>
-                                        <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ $item->category }}</td>
+                                        <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ $item->display_category }}</td>
                                         <td class="px-4 py-2 text-gray-600 dark:text-gray-400">{{ $item->recordedBy?->name ?? '—' }}</td>
                                         <td class="px-4 py-2 text-right font-semibold text-red-600 dark:text-red-400">&#8369;{{ number_format($item->amount, 2) }}</td>
                                     </tr>

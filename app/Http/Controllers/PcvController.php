@@ -12,6 +12,17 @@ use Carbon\Carbon;
 
 class PcvController extends Controller
 {
+    private const DEFAULT_CATEGORIES = [
+        'Materials',
+        'Labor',
+        'Utilities',
+        'Rent',
+        'Equipment',
+        'Transportation',
+        'Marketing',
+        'Other',
+    ];
+
     public function index()
     {
         $pcvs = Pcv::with('recordedBy')->latest()->paginate(15);
@@ -28,14 +39,16 @@ class PcvController extends Controller
 
     public function create()
     {
-        return view('pcv.create');
+        return view('pcv.create', [
+            'categories' => $this->categoryOptions(),
+        ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'pcv_name' => 'required|string|max:255',
-            'category' => 'required|in:Materials,Labor,Utilities,Rent,Equipment,Transportation,Marketing,Other',
+            'category' => 'required|string|max:255',
             'other_category' => 'required_if:category,Other|nullable|string|max:255',
             'amount' => 'required|numeric|min:0',
             'date' => 'required|date|before_or_equal:today',
@@ -44,9 +57,7 @@ class PcvController extends Controller
             'voucher' => 'nullable|file|mimes:pdf,jpeg,png,jpg|max:5120',
         ]);
 
-        if ($validated['category'] !== 'Other') {
-            $validated['other_category'] = null;
-        }
+        $validated = $this->normalizeCategory($validated);
 
         if ($request->hasFile('voucher')) {
             $validated['voucher_path'] = $request->file('voucher')->store('pcv', 'public');
@@ -79,14 +90,17 @@ class PcvController extends Controller
 
     public function edit(Pcv $pcv)
     {
-        return view('pcv.edit', compact('pcv'));
+        return view('pcv.edit', [
+            'pcv' => $pcv,
+            'categories' => $this->categoryOptions(),
+        ]);
     }
 
     public function update(Request $request, Pcv $pcv)
     {
         $validated = $request->validate([
             'pcv_name' => 'required|string|max:255',
-            'category' => 'required|in:Materials,Labor,Utilities,Rent,Equipment,Transportation,Marketing,Other',
+            'category' => 'required|string|max:255',
             'other_category' => 'required_if:category,Other|nullable|string|max:255',
             'amount' => 'required|numeric|min:0',
             'date' => 'required|date',
@@ -95,9 +109,7 @@ class PcvController extends Controller
             'voucher' => 'nullable|file|mimes:pdf,jpeg,png,jpg|max:5120',
         ]);
 
-        if ($validated['category'] !== 'Other') {
-            $validated['other_category'] = null;
-        }
+        $validated = $this->normalizeCategory($validated);
 
         if ($request->hasFile('voucher')) {
             if ($pcv->voucher_path) {
@@ -163,5 +175,34 @@ class PcvController extends Controller
         }
 
         return 'PCV # ' . str_pad((string) $next, 2, '0', STR_PAD_LEFT);
+    }
+
+    private function categoryOptions(): array
+    {
+        $customCategories = Pcv::where('category', 'Other')
+            ->whereNotNull('other_category')
+            ->distinct()
+            ->orderBy('other_category')
+            ->pluck('other_category')
+            ->filter()
+            ->all();
+
+        return collect(self::DEFAULT_CATEGORIES)
+            ->merge($customCategories)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function normalizeCategory(array $validated): array
+    {
+        if (! in_array($validated['category'], self::DEFAULT_CATEGORIES, true)) {
+            $validated['other_category'] = $validated['category'];
+            $validated['category'] = 'Other';
+        } elseif ($validated['category'] !== 'Other') {
+            $validated['other_category'] = null;
+        }
+
+        return $validated;
     }
 }

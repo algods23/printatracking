@@ -38,6 +38,13 @@ class Pcv extends Model
         return 'PCV # ' . str_pad((string) $this->id, 2, '0', STR_PAD_LEFT);
     }
 
+    public function getDisplayCategoryAttribute(): string
+    {
+        return $this->category === 'Other' && ! empty($this->other_category)
+            ? $this->other_category
+            : $this->category;
+    }
+
     public function recordedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recorded_by');

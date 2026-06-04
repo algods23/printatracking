@@ -35,7 +35,7 @@
             @forelse($pcvs as $pcv)
                 <tr>
                     <td class="px-4 py-3 text-gray-900 dark:text-white">{{ $pcv->pcv_name }}</td>
-                    <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $pcv->category === 'Other' && $pcv->other_category ? $pcv->other_category : $pcv->category }}</td>
+                    <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $pcv->display_category }}</td>
                     <td class="px-4 py-3 font-semibold text-orange-600 dark:text-orange-400">&#8369;{{ number_format($pcv->amount, 2) }}</td>
                     <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $pcv->date->format('M d, Y') }}</td>
                     <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $pcv->recordedBy?->name ?? '—' }}</td>

@@ -22,7 +22,7 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-            <div><p class="text-sm text-gray-500 dark:text-gray-400">Category</p><p class="text-base font-medium text-gray-900 dark:text-white">{{ $pcv->category === 'Other' && $pcv->other_category ? $pcv->other_category : $pcv->category }}</p></div>
+            <div><p class="text-sm text-gray-500 dark:text-gray-400">Category</p><p class="text-base font-medium text-gray-900 dark:text-white">{{ $pcv->display_category }}</p></div>
             <div><p class="text-sm text-gray-500 dark:text-gray-400">Amount</p><p class="text-base font-medium text-gray-900 dark:text-white">₱{{ number_format($pcv->amount, 2) }}</p></div>
             <div><p class="text-sm text-gray-500 dark:text-gray-400">Date</p><p class="text-base font-medium text-gray-900 dark:text-white">{{ $pcv->date->format('M d, Y') }}</p></div>
             <div><p class="text-sm text-gray-500 dark:text-gray-400">Recorded By</p><p class="text-base font-medium text-gray-900 dark:text-white">{{ $pcv->recordedBy->name }}</p></div>

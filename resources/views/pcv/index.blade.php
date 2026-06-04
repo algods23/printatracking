@@ -49,7 +49,7 @@
                         <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">{{ $pcv->display_pcv_number }}</td>
                         <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">{{ $pcv->pcv_name }}</td>
                         <td class="px-6 py-4 text-sm">
-                            <span class="inline-block px-3 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-xs font-medium">{{ $pcv->category === 'Other' && $pcv->other_category ? $pcv->other_category : $pcv->category }}</span>
+                            <span class="inline-block px-3 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-xs font-medium">{{ $pcv->display_category }}</span>
                         </td>
                         <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-gray-100">₱{{ number_format($pcv->amount, 2) }}</td>
                         <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $pcv->date->format('M d, Y') }}</td>

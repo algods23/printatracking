@@ -11,6 +11,17 @@ use Carbon\Carbon;
 
 class ExpenseController extends Controller
 {
+    private const DEFAULT_CATEGORIES = [
+        'Materials',
+        'Labor',
+        'Utilities',
+        'Rent',
+        'Equipment',
+        'Transportation',
+        'Marketing',
+        'Other',
+    ];
+
     public function index()
     {
         $expenses = Expense::with('recordedBy')->latest()->paginate(15);
@@ -37,6 +48,7 @@ class ExpenseController extends Controller
     {
         return view('expenses.create', [
             'nextExpenseNumber' => $this->nextExpenseNumber(),
+            'categories' => $this->categoryOptions(),
         ]);
     }
 
@@ -44,7 +56,7 @@ class ExpenseController extends Controller
     {
         $validated = $request->validate([
             'expense_name' => 'required|string|max:255',
-            'category' => 'required|in:Materials,Labor,Utilities,Rent,Equipment,Transportation,Marketing,Other',
+            'category' => 'required|string|max:255',
             'other_category' => 'required_if:category,Other|nullable|string|max:255',
             'amount' => 'required|numeric|min:0',
             'date' => 'required|date|before_or_equal:today',
@@ -53,9 +65,7 @@ class ExpenseController extends Controller
             'receipt' => 'nullable|file|mimes:pdf,jpeg,png,jpg|max:5120',
         ]);
 
-        if ($validated['category'] !== 'Other') {
-            $validated['other_category'] = null;
-        }
+        $validated = $this->normalizeCategory($validated);
 
         if ($request->hasFile('receipt')) {
             $validated['receipt_path'] = $request->file('receipt')->store('expenses', 'public');
@@ -85,14 +95,17 @@ class ExpenseController extends Controller
 
     public function edit(Expense $expense)
     {
-        return view('expenses.edit', compact('expense'));
+        return view('expenses.edit', [
+            'expense' => $expense,
+            'categories' => $this->categoryOptions(),
+        ]);
     }
 
     public function update(Request $request, Expense $expense)
     {
         $validated = $request->validate([
             'expense_name' => 'required|string|max:255',
-            'category' => 'required|in:Materials,Labor,Utilities,Rent,Equipment,Transportation,Marketing,Other',
+            'category' => 'required|string|max:255',
             'other_category' => 'required_if:category,Other|nullable|string|max:255',
             'amount' => 'required|numeric|min:0',
             'date' => 'required|date',
@@ -101,9 +114,7 @@ class ExpenseController extends Controller
             'receipt' => 'nullable|file|mimes:pdf,jpeg,png,jpg|max:5120',
         ]);
 
-        if ($validated['category'] !== 'Other') {
-            $validated['other_category'] = null;
-        }
+        $validated = $this->normalizeCategory($validated);
 
         if ($request->hasFile('receipt')) {
             if ($expense->receipt_path) {
@@ -168,7 +179,7 @@ class ExpenseController extends Controller
         $expenses = $query->with('recordedBy')->get();
 
         $totalAmount = $expenses->sum('amount');
-        $categoryBreakdown = $expenses->groupBy('category')->map(fn($group) => $group->sum('amount'));
+        $categoryBreakdown = $expenses->groupBy(fn ($expense) => $expense->display_category)->map(fn($group) => $group->sum('amount'));
 
         return view('expenses.report', compact('expenses', 'totalAmount', 'categoryBreakdown'));
     }
@@ -186,5 +197,34 @@ class ExpenseController extends Controller
         }
 
         return 'Disbursement # ' . str_pad((string) $next, 2, '0', STR_PAD_LEFT);
+    }
+
+    private function categoryOptions(): array
+    {
+        $customCategories = Expense::where('category', 'Other')
+            ->whereNotNull('other_category')
+            ->distinct()
+            ->orderBy('other_category')
+            ->pluck('other_category')
+            ->filter()
+            ->all();
+
+        return collect(self::DEFAULT_CATEGORIES)
+            ->merge($customCategories)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function normalizeCategory(array $validated): array
+    {
+        if (! in_array($validated['category'], self::DEFAULT_CATEGORIES, true)) {
+            $validated['other_category'] = $validated['category'];
+            $validated['category'] = 'Other';
+        } elseif ($validated['category'] !== 'Other') {
+            $validated['other_category'] = null;
+        }
+
+        return $validated;
     }
 }

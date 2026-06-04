@@ -35,7 +35,7 @@
             @forelse($expenses as $expense)
                 <tr>
                     <td class="px-4 py-3 text-gray-900 dark:text-white">{{ $expense->expense_name }}</td>
-                    <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $expense->category }}</td>
+                    <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $expense->display_category }}</td>
                     <td class="px-4 py-3 font-semibold text-red-600 dark:text-red-400">&#8369;{{ number_format($expense->amount, 2) }}</td>
                     <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $expense->date->format('M d, Y') }}</td>
                     <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $expense->recordedBy?->name ?? '—' }}</td>

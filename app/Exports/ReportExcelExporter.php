@@ -134,7 +134,7 @@ class ReportExcelExporter
             $totalAmount += $amount;
             $body[] = [
                 $expense->expense_name,
-                $expense->category,
+                $expense->display_category,
                 $amount,
                 $this->excelDate($expense->date),
                 $expense->recordedBy?->name ?? '—',
@@ -251,7 +251,7 @@ class ReportExcelExporter
             $totalAmount += $amount;
             $body[] = [
                 $pcv->pcv_name,
-                $pcv->category === 'Other' && $pcv->other_category ? $pcv->other_category : $pcv->category,
+                $pcv->display_category,
                 $amount,
                 $this->excelDate($pcv->date),
                 $pcv->recordedBy?->name ?? '—',

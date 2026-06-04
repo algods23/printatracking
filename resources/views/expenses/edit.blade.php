@@ -28,21 +28,16 @@
                     <label for="category" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Category *</label>
                     <select id="category" name="category" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('category') border-red-500 @enderror">
                         <option value="">Select category</option>
-                        <option value="Materials" {{ old('category', $expense->category) == 'Materials' ? 'selected' : '' }}>Materials</option>
-                        <option value="Labor" {{ old('category', $expense->category) == 'Labor' ? 'selected' : '' }}>Labor</option>
-                        <option value="Utilities" {{ old('category', $expense->category) == 'Utilities' ? 'selected' : '' }}>Utilities</option>
-                        <option value="Rent" {{ old('category', $expense->category) == 'Rent' ? 'selected' : '' }}>Rent</option>
-                        <option value="Equipment" {{ old('category', $expense->category) == 'Equipment' ? 'selected' : '' }}>Equipment</option>
-                        <option value="Transportation" {{ old('category', $expense->category) == 'Transportation' ? 'selected' : '' }}>Transportation</option>
-                        <option value="Marketing" {{ old('category', $expense->category) == 'Marketing' ? 'selected' : '' }}>Marketing</option>
-                        <option value="Other" {{ old('category', $expense->category) == 'Other' ? 'selected' : '' }}>Other</option>
+                        @foreach($categories as $categoryOption)
+                            <option value="{{ $categoryOption }}" {{ old('category', $expense->display_category) == $categoryOption ? 'selected' : '' }}>{{ $categoryOption }}</option>
+                        @endforeach
                     </select>
                     @error('category')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <div id="otherCategoryWrapper" class="{{ old('category', $expense->category) === 'Other' ? '' : 'hidden' }}">
+                <div id="otherCategoryWrapper" class="{{ old('category', $expense->display_category) === 'Other' ? '' : 'hidden' }}">
                     <label for="other_category" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Other Category *</label>
                     <input type="text" id="other_category" name="other_category" value="{{ old('other_category', $expense->other_category) }}" placeholder="Specify category type" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('other_category') border-red-500 @enderror">
                     @error('other_category')

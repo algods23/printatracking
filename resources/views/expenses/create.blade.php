@@ -29,14 +29,9 @@
                     <label for="category" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Category *</label>
                     <select id="category" name="category" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('category') border-red-500 @enderror">
                         <option value="">Select category</option>
-                        <option value="Materials" {{ old('category') == 'Materials' ? 'selected' : '' }}>Materials</option>
-                        <option value="Labor" {{ old('category') == 'Labor' ? 'selected' : '' }}>Labor</option>
-                        <option value="Utilities" {{ old('category') == 'Utilities' ? 'selected' : '' }}>Utilities</option>
-                        <option value="Rent" {{ old('category') == 'Rent' ? 'selected' : '' }}>Rent</option>
-                        <option value="Equipment" {{ old('category') == 'Equipment' ? 'selected' : '' }}>Equipment</option>
-                        <option value="Transportation" {{ old('category') == 'Transportation' ? 'selected' : '' }}>Transportation</option>
-                        <option value="Marketing" {{ old('category') == 'Marketing' ? 'selected' : '' }}>Marketing</option>
-                        <option value="Other" {{ old('category') == 'Other' ? 'selected' : '' }}>Other</option>
+                        @foreach($categories as $categoryOption)
+                            <option value="{{ $categoryOption }}" {{ old('category') == $categoryOption ? 'selected' : '' }}>{{ $categoryOption }}</option>
+                        @endforeach
                     </select>
                     @error('category')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>

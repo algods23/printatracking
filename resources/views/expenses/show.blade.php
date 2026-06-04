@@ -30,7 +30,7 @@
 
             <div>
                 <p class="text-sm text-gray-500 dark:text-gray-400">Category</p>
-                <p class="text-base font-medium text-gray-900 dark:text-white">{{ $expense->category === 'Other' && $expense->other_category ? $expense->other_category : $expense->category }}</p>
+                <p class="text-base font-medium text-gray-900 dark:text-white">{{ $expense->display_category }}</p>
             </div>
 
             <div>
