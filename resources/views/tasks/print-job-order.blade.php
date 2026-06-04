@@ -287,23 +287,34 @@
             font-size: 8px;
         }
         .footer-row {
-            display: flex;
-            justify-content: space-between;
+            display: table;
+            width: 100%;
+            table-layout: fixed;
             margin-top: 2px;
             font-size: 7px;
         }
+        .footer-row .footnote,
+        .processed {
+            display: table-cell;
+            vertical-align: top;
+        }
         .footer-row .footnote {
-            max-width: 55%;
+            width: 58%;
             line-height: 1.1;
         }
         .processed {
+            width: 42%;
+            text-align: right;
             font-size: 7px;
+            white-space: nowrap;
         }
         .processed .sig-line {
             border-bottom: 1px solid #000;
+            display: inline-block;
             min-width: 0.7in;
             height: 8px;
             margin-top: 1px;
+            text-align: left;
         }
         @media print {
             .no-print { display: none !important; }
@@ -329,7 +340,7 @@
     <div class="header-row">
         <div class="logo-block">
             @if(!empty($logoSrc))
-                <img src="{{ $logoSrc }}" alt="" style="max-height:0.24in;max-width:0.7in;">
+                <img src="{{ $logoSrc }}" alt="" style="max-height:2in;max-width:1in;">
             @else
                 <div class="fallback-logo" aria-label="Printa Signages and Stickers">
                     <div class="logo-shapes" aria-hidden="true">
@@ -442,7 +453,7 @@
     <div class="header-row">
         <div class="logo-block">
             @if(!empty($logoSrc))
-                <img src="{{ $logoSrc }}" alt="" style="max-height:0.24in;max-width:0.7in;">
+                <img src="{{ $logoSrc }}" alt="" style="max-height:2in;max-width:1in;">
             @else
                 <div class="fallback-logo" aria-label="Printa Signages and Stickers">
                     <div class="logo-shapes" aria-hidden="true">
