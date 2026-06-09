@@ -39,14 +39,14 @@
         }
 
         .header-logo {
-            width: 255px;
+            width: 350px;
             text-align: left;
         }
 
         .header-logo img {
             display: block;
-            max-height: 93px;
-            max-width: 255px;
+            max-height: 150px;
+            max-width: 400px;
             object-fit: contain;
         }
 
@@ -65,16 +65,16 @@
         }
 
         .header-company .address {
-            font-size: 9.5px;
+            font-size: 12px;
             color: #222;
             margin-top: 2px;
         }
 
         /* ── BILLING STATEMENT TITLE ── */
         .title-banner {
-            background: #d4af37;
+
             text-align: center;
-            padding: 10px;
+            padding: 20px;
             border-top: 1px solid #b8960c;
         }
 
@@ -105,7 +105,7 @@
             background: #d4af37;
             color: #000;
             font-weight: 700;
-            font-size: 10px;
+            font-size: 15px;
             padding: 6px 8px;
             text-transform: uppercase;
             border-bottom: 1px solid #999;
@@ -113,19 +113,19 @@
 
         .box-content {
             padding: 10px;
-            font-size: 9px;
+            font-size: 20px;
             line-height: 1.5;
         }
 
         .bill-to-box .client-name {
-            font-weight: 700;
+            font-weight: 1400;
             margin-bottom: 2px;
         }
 
         .details-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 9px;
+            font-size: 15px;
         }
 
         .details-table tr td {
@@ -153,7 +153,7 @@
         .product-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 9px;
+            font-size: 13px;
             margin-bottom: 0;
         }
 
@@ -161,7 +161,7 @@
             background: #d4af37;
             color: #000;
             font-weight: 700;
-            font-size: 9px;
+            font-size: 14px;
             text-transform: uppercase;
             padding: 8px 6px;
             border: 1px solid #999;
@@ -236,7 +236,7 @@
         .totals-table {
             width: 280px;
             border-collapse: collapse;
-            font-size: 10px;
+            font-size: 13px;
             margin-left: auto;
             margin-right: 0;
         }
@@ -267,7 +267,7 @@
             border: 1px dashed #999;
             padding: 8px 10px;
             background: #fffdf0;
-            font-size: 9px;
+            font-size: 12px;
             line-height: 1.4;
         }
 
@@ -289,7 +289,7 @@
         .note-banner {
             background: #d4af37;
             padding: 8px 12px;
-            font-size: 9px;
+            font-size: 13px;
             font-weight: 600;
             margin: 12px 12px 0;
             border: 1px solid #999;
@@ -305,7 +305,7 @@
         }
 
         .footer-left {
-            font-size: 10px;
+            font-size: 14px;
             line-height: 1.5;
             text-align: left;
         }
@@ -318,7 +318,7 @@
 
         .footer-right {
             text-align: right;
-            font-size: 9px;
+            font-size: 17px;
             margin-right: 40px;
         }
 
@@ -329,7 +329,7 @@
         }
 
         .sig-title {
-            font-size: 8px;
+            font-size: 15px;
             color: #666;
         }
     </style>
@@ -352,14 +352,12 @@
                 </tr>
             </table>
         </div>
-
-        <!-- BILLING STATEMENT TITLE -->
         <div class="title-banner">
-            <h1>BILLING STATEMENT</h1>
-        </div>
-
+   <h1>BILLING STATEMENT</h1>
+ </div>
         <!-- BILL TO / STATEMENT DETAILS -->
         <div class="meta-row">
+            
             <div class="bill-to-box">
                 <div class="box-header">Bill To:</div>
                 <div class="box-content">
@@ -467,7 +465,7 @@
                             </tr>
                             <tr class="total-due">
                                 <td>TOTAL AMOUNT DUE</td>
-                                <td>{{ number_format($totalAmount, 2) }}</td>
+                                <td>{{ number_format($totalBalance, 2) }}</td>
                             </tr>
                         </table>
                     </td>
