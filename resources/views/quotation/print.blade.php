@@ -23,7 +23,7 @@
 
         /* ── COMPANY HEADER ── */
         .header-top {
-            background: #d4af37;
+            background: #fbe102;
             padding: 8px 16px;
         }
 
@@ -75,7 +75,7 @@
 
             text-align: center;
             padding: 20px;
-            border-top: 1px solid #b8960c;
+            border-top: 1px solid #ffff46;
         }
 
         .title-banner h1 {
@@ -102,7 +102,7 @@
         }
 
         .box-header {
-            background: #d4af37;
+            background: #fbe102;
             color: #000;
             font-weight: 700;
             font-size: 15px;
@@ -158,7 +158,7 @@
         }
 
         .product-table thead tr th {
-            background: #d4af37;
+            background: #fbe102;
             color: #000;
             font-weight: 700;
             font-size: 14px;
@@ -200,7 +200,7 @@
             content: "•";
             position: absolute;
             left: 0;
-            color: #d4af37;
+            color: #fbe102;
         }
 
         .text-right { text-align: right; }
@@ -256,7 +256,7 @@
         }
 
         .totals-table tr.total-due td {
-            background: #d4af37;
+            background: #fbe102;
             font-weight: 700;
             color: #000;
         }
@@ -287,7 +287,7 @@
 
         /* ── NOTE BANNER ── */
         .note-banner {
-            background: #d4af37;
+            background: #fbe102;
             padding: 8px 12px;
             font-size: 13px;
             font-weight: 600;
@@ -312,7 +312,7 @@
 
         .footer-left .company-name {
             font-style: italic;
-            color: #d4af37;
+            color: #fbe102;
             font-weight: 600;
         }
 
