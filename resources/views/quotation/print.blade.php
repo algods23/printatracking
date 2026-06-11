@@ -8,7 +8,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: DejaVu Sans, Arial, sans-serif;
             color: #1a1a1a;
             font-size: 10px;
             line-height: 1.3;
@@ -234,6 +234,7 @@
         }
 
         .totals-table {
+        
             width: 280px;
             border-collapse: collapse;
             font-size: 13px;
@@ -242,16 +243,19 @@
         }
 
         .totals-table tr td {
+           
             border: 1px solid #999;
             padding: 6px 8px;
         }
 
         .totals-table tr td:last-child {
+           
             text-align: right;
             font-weight: 600;
         }
 
         .totals-table tr.subtotal td {
+            
             background: #faf8f3;
         }
 
@@ -441,31 +445,40 @@
         <div class="totals-section">
             <table class="summary-layout">
                 <tr>
-                    <td class="summary-left">
-                        <div class="payment-instructions">
-                            <div class="pi-title">Payment Instructions</div>
-                            <div>Please make check payable to:</div>
-                            <div class="pi-name">KRISTINE PANTASTICO</div>
-                            <div>Kindly send proof of payment for verification. Thank you!</div>
+                <td class="summary-left">
+                    <div class="payment-instructions">
+                        <div class="pi-title">Payment Instructions:</div>
+
+                        <div class="pi-item">
+                            a.) For check payment, make it payable to: <span class="pi-name">KRISTINE PANTASTICO</span><br>
+                            
                         </div>
-                    </td>
+
+                        <div class="pi-item">
+                            b.) For GCash payment, send proof of payment for verification.
+                        </div>
+                    </div>
+                </td>
                     <td class="summary-right">
                         <table class="totals-table">
-                            <tr class="subtotal">
-                                <td>Subtotal</td>
-                                <td>{{ number_format($totalAmount, 2) }}</td>
+                           <tr class="subtotal">
+                            <td>Subtotal</td>
+                            <td>{{ number_format($totalAmount, 2) }}</td>
                             </tr>
+
                             <tr class="subtotal">
                                 <td>Deposit</td>
                                 <td>{{ number_format($totalDeposit, 2) }}</td>
                             </tr>
+
                             <tr class="subtotal">
                                 <td>Balance</td>
                                 <td>{{ number_format($totalBalance, 2) }}</td>
                             </tr>
+
                             <tr class="total-due">
                                 <td>TOTAL AMOUNT DUE</td>
-                                <td>{{ number_format($totalBalance, 2) }}</td>
+                                <td>₱{{ number_format($totalBalance, 2) }}</td>
                             </tr>
                         </table>
                     </td>
