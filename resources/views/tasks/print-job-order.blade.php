@@ -19,7 +19,7 @@
         body {
             margin: 0;
             padding: 0;
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: DejaVu Sans, sans-serif;
             font-size: 9px;
             color: #111;
             line-height: 1.2;
@@ -393,8 +393,8 @@
                 <tr>
                     <td class="desc">{{ $item ? $item->job_order : '' }}</td>
                     <td class="n">{{ $item ? $item->quantity : '' }}</td>
-                    <td class="money">{!! $item ? '&#8369;'.number_format((float)$item->price, 2) : '' !!}</td>
-                    <td class="money">{!! $item ? '&#8369;'.number_format((float)$item->total, 2) : '' !!}</td>
+                    <td class="money">{!! $item ? '₱'.number_format((float)$item->price, 2) : '' !!}</td>
+                    <td class="money">{!! $item ? '₱'.number_format((float)$item->total, 2) : '' !!}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -420,15 +420,15 @@
         <div class="totals-block">
             <div>
                 <span class="label">TOTAL :</span>
-                <span class="amount">&#8369;{{ number_format($totalAmount, 2) }}</span>
+                <span class="amount">₱{{ number_format($totalAmount, 2) }}</span>
             </div>
             <div>
                 <span class="label">DEPOSIT :</span>
-                <span class="amount">&#8369;{{ number_format($paidAmount, 2) }}</span>
+                <span class="amount">₱{{ number_format($paidAmount, 2) }}</span>
             </div>
             <div>
                 <span class="label">BALANCE :</span>
-                <span class="amount">&#8369;{{ number_format($balance, 2) }}</span>
+                <span class="amount">₱{{ number_format($balance, 2) }}</span>
             </div>
         </div>
     </div>
@@ -506,8 +506,8 @@
                 <tr>
                     <td class="desc">{{ $item ? $item->job_order : '' }}</td>
                     <td class="n">{{ $item ? $item->quantity : '' }}</td>
-                    <td class="money">{!! $item ? '&#8369;'.number_format((float)$item->price, 2) : '' !!}</td>
-                    <td class="money">{!! $item ? '&#8369;'.number_format((float)$item->total, 2) : '' !!}</td>
+                    <td class="money">{!! $item ? '₱'.number_format((float)$item->price, 2) : '' !!}</td>
+                    <td class="money">{!! $item ? '₱'.number_format((float)$item->total, 2) : '' !!}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -533,15 +533,15 @@
         <div class="totals-block">
             <div>
                 <span class="label">TOTAL :</span>
-                <span class="amount">&#8369;{{ number_format($totalAmount, 2) }}</span>
+                <span class="amount">₱{{ number_format($totalAmount, 2) }}</span>
             </div>
             <div>
                 <span class="label">DEPOSIT :</span>
-                <span class="amount">&#8369;{{ number_format($paidAmount, 2) }}</span>
+                <span class="amount">₱{{ number_format($paidAmount, 2) }}</span>
             </div>
             <div>
                 <span class="label">BALANCE :</span>
-                <span class="amount">&#8369;{{ number_format($balance, 2) }}</span>
+                <span class="amount">₱{{ number_format($balance, 2) }}</span>
             </div>
         </div>
     </div>

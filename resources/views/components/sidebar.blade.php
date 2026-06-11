@@ -37,13 +37,12 @@
                 <span>PCV</span>
             </a>
 
-            <!-- Billing -->
-            @if(auth()->user()->isAdmin())
-            <a href="{{ route('billing.index') }}" class="nav-link {{ request()->routeIs('billing.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors {{ request()->routeIs('billing.*') ? 'bg-yellow-500 text-black' : '' }}">
-                <i data-lucide="file-text" class="w-5 h-5"></i>
-                <span>Billing</span>
-            </a>
-            @endif
+          <!-- Billing -->
+<a href="{{ route('billing.index') }}"
+   class="nav-link {{ request()->routeIs('billing.*') ? 'active' : '' }} flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors {{ request()->routeIs('billing.*') ? 'bg-yellow-500 text-black' : '' }}">
+    <i data-lucide="file-text" class="w-5 h-5"></i>
+    <span>Billing</span>
+</a>
 
             <!-- Reports -->
             <a href="{{ route('reports.index') }}" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors {{ request()->routeIs('reports.*') ? 'bg-yellow-500 text-black' : '' }}">
