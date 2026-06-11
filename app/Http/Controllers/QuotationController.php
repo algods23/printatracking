@@ -12,9 +12,7 @@ class QuotationController extends Controller
 {
     public function index(Request $request)
     {
-        if (! auth()->check() || ! auth()->user()?->isAdmin()) {
-            abort(403, 'Only administrators can access billing.');
-        }
+       
 
         $query = Task::query()
             ->with(['assignedTo', 'receipts'])
@@ -70,10 +68,7 @@ class QuotationController extends Controller
 
     public function download(Request $request)
     {
-        if (! auth()->check() || ! auth()->user()?->isAdmin()) {
-            abort(403, 'Only administrators can access billing.');
-        }
-
+     
         $customerName = $request->input('customer');
         $selectedIds = array_values(array_filter((array) $request->input('ids', [])));
         $query = Task::query()

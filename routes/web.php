@@ -57,6 +57,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/printer', [SettingController::class, 'updatePrinter'])->name('settings.printer');
     Route::post('/settings/theme', [SettingController::class, 'updateTheme'])->name('settings.theme');
 
+    // Billing
+    Route::get('/billing', [QuotationController::class, 'index'])->name('billing.index');
+    Route::get('/billing/download', [QuotationController::class, 'download'])->name('billing.download');
+        
+
+
     // User Management (Admin only)
     Route::middleware('admin')->group(function () {
         Route::get('/settings/users', [SettingController::class, 'manageUsers'])->name('settings.users');
@@ -66,10 +72,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/settings/users/{user}', [SettingController::class, 'updateUser'])->name('settings.update-user');
         Route::delete('/settings/users/{user}', [SettingController::class, 'deleteUser'])->name('settings.delete-user');
 
-        // Billing
-        Route::get('/billing', [QuotationController::class, 'index'])->name('billing.index');
-        Route::get('/billing/download', [QuotationController::class, 'download'])->name('billing.download');
-        
+   
         Route::post('/settings/backup', [SettingController::class, 'backup'])->name('settings.backup');
         Route::post('/settings/restore', [SettingController::class, 'restore'])->name('settings.restore');
     });
