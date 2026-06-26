@@ -88,7 +88,7 @@
                                     <a href="{{ route('tasks.show', $task) }}" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 rounded transition-colors inline-flex" title="View task">
                                         <i data-lucide="eye" class="w-4 h-4"></i>
                                     </a>
-                                    <a href="#" data-customer="{{ $task->customer_name }}" onclick="openDownloadModal(this.getAttribute('data-customer')); return false;" class="p-2 text-green-700 dark:text-green-400 hover:bg-green-500/10 rounded transition-colors inline-flex" title="Download customer billing PDF">
+                                    <a href="#" data-customer="{{ $task->customer_name }}" onclick="openDownloadModal(this.getAttribute('data-customer')); return false;" class="p-2 text-green-700 dark:text-green-400 hover:bg-green-500/10 rounded transition-colors inline-flex" title="Download customer billing JPG">
                                         <i data-lucide="download" class="w-4 h-4"></i>
                                     </a>
                                 </div>
@@ -136,6 +136,14 @@
             </div>
         </div>
     </div>
+
+    <div id="downloadOverlay" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/60">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-sm p-6 text-center border border-gray-200 dark:border-gray-700">
+            <div class="mx-auto mb-4 h-10 w-10 rounded-full border-4 border-green-200 border-t-green-700 animate-spin"></div>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Downloading JPG</h3>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Please wait until the billing statement is ready.</p>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -165,7 +173,35 @@
         downloadCustomer = null;
     }
 
-    function confirmDownload() {
+    function showDownloadOverlay() {
+        document.getElementById('downloadOverlay').classList.remove('hidden');
+    }
+
+    function hideDownloadOverlay() {
+        document.getElementById('downloadOverlay').classList.add('hidden');
+    }
+
+    function filenameFromDisposition(disposition) {
+        if (!disposition) {
+            return 'billing-statement.jpg';
+        }
+
+        var match = disposition.match(/filename="?([^"]+)"?/i);
+        return match ? match[1] : 'billing-statement.jpg';
+    }
+
+    function saveBlob(blob, filename) {
+        var url = window.URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    }
+
+    async function confirmDownload() {
         var dueDate = document.getElementById('modal_due_date').value;
         var authRep = document.getElementById('modal_auth_rep').value;
         
@@ -215,9 +251,32 @@
                 form.appendChild(queryInput);
             }
         }
-        
-        form.submit();
+
         closeDownloadModal();
+        showDownloadOverlay();
+
+        try {
+            var params = new URLSearchParams(new FormData(form));
+            var response = await fetch(form.action + '?' + params.toString(), {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'image/jpeg'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Download failed.');
+            }
+
+            var blob = await response.blob();
+            var filename = filenameFromDisposition(response.headers.get('Content-Disposition'));
+            saveBlob(blob, filename);
+        } catch (error) {
+            alert('The billing JPG could not be downloaded. Please try again.');
+        } finally {
+            hideDownloadOverlay();
+        }
     }
 
     function toggleAll(source) {
