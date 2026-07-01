@@ -403,7 +403,7 @@
     const dueDateInput = document.getElementById('due_date');
     const prioritySelect = document.getElementById('priority');
 
-    function toggleWalkinFields() {
+    function toggleWalkinFields(clearCustomerName = true) {
         const isWalkin = walkinCheckbox.checked;
 
         if (isWalkin) {
@@ -423,8 +423,10 @@
             document.querySelector('.duedate-required').textContent = 'Due Date';
             document.querySelector('.priority-required').textContent = 'Priority';
         } else {
-            // Clear customer name and make it required
-            customerNameInput.value = '';
+            // Clear only when changing from walk-in manually; preserve the current task on page load.
+            if (clearCustomerName) {
+                customerNameInput.value = '';
+            }
             customerNameInput.setAttribute('required', 'required');
 
             // Revert other fields to required
@@ -440,7 +442,7 @@
     walkinCheckbox.addEventListener('change', toggleWalkinFields);
 
     // Initialize on page load
-    toggleWalkinFields();
+    toggleWalkinFields(false);
     
     lucide.createIcons();
 </script>
