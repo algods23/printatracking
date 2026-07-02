@@ -125,7 +125,8 @@
         .details-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 15px;
+            font-size: 9px;
+            line-height: 1.15;
         }
 
         .details-table tr td {
@@ -136,7 +137,7 @@
         .details-table tr td:first-child {
             font-weight: 600;
             white-space: nowrap;
-            min-width: 90px;
+            min-width: 82px;
         }
 
         .details-table tr td:nth-child(2) {
@@ -237,7 +238,7 @@
         
             width: 280px;
             border-collapse: collapse;
-            font-size: 13px;
+            font-size: 12px;
             margin-left: auto;
             margin-right: 0;
         }
@@ -261,8 +262,12 @@
 
         .totals-table tr.total-due td {
             background: #fbe102;
-            font-weight: 700;
+            font-weight: 500;
             color: #000;
+        }
+
+        .totals-table tr.total-due td:last-child {
+            font-size: 11px;
         }
 
         .payment-instructions {
@@ -477,7 +482,7 @@
                             </tr>
 
                             <tr class="total-due">
-                                <td>TOTAL AMOUNT DUE</td>
+                                <td>TOTAL AMOUNT</td>
                                 <td>₱{{ number_format($totalBalance, 2) }}</td>
                             </tr>
                         </table>

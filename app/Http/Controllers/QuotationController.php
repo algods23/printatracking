@@ -240,7 +240,7 @@ class QuotationController extends Controller
             'Date : ' . now()->format('M d, Y'),
             'Payment Terms : 50% Downpayment, 50% Upon Receipt',
             'Due Date : ' . $data['dueDate'],
-        ], $font, $bold, $yellow, $black, $gray, 18);
+        ], $font, $bold, $yellow, $black, $gray, 14, 4);
 
         $y = 486;
         $cols = [140, 470, 170, 100, 250];
@@ -288,14 +288,14 @@ class QuotationController extends Controller
             ['Subtotal', $data['totalAmount'], false],
             ['Deposit', $data['totalDeposit'], false],
             ['Balance', $data['totalBalance'], false],
-            ['TOTAL AMOUNT DUE', $data['totalBalance'], true],
+            ['TOTAL AMOUNT', $data['totalBalance'], true],
         ];
         foreach ($labels as $i => [$label, $amount, $highlight]) {
             $rowY = $y + ($i * 46);
             imagefilledrectangle($image, $totalX, $rowY, $totalX + 360, $rowY + 46, $highlight ? $yellow : ($i % 2 ? $white : $softGray));
             imagerectangle($image, $totalX, $rowY, $totalX + 360, $rowY + 46, $gray);
-            $this->drawText($image, $label, 15, $totalX + 14, $rowY + 14, $black, $highlight ? $bold : $font);
-            $this->drawText($image, 'PHP ' . number_format($amount, 2), 15, $totalX + 346, $rowY + 14, $black, $bold, 'right');
+            $this->drawText($image, $label, 14, $totalX + 14, $rowY + 14, $black, $highlight ? $bold : $font);
+            $this->drawText($image, 'PHP ' . number_format($amount, 2), 14, $totalX + 346, $rowY + 14, $black, $bold, 'right');
         }
 
         $y += 204;
@@ -318,7 +318,7 @@ class QuotationController extends Controller
         return $jpg;
     }
 
-    private function drawInfoBox($image, int $x, int $y, int $w, int $h, string $title, array $lines, string $font, string $bold, int $yellow, int $black, int $gray, int $lineSize = 22): void
+    private function drawInfoBox($image, int $x, int $y, int $w, int $h, string $title, array $lines, string $font, string $bold, int $yellow, int $black, int $gray, int $lineSize = 22, int $lineGap = 16): void
     {
         imagefilledrectangle($image, $x, $y, $x + $w, $y + $h, imagecolorallocate($image, 255, 255, 255));
         imagerectangle($image, $x, $y, $x + $w, $y + $h, $gray);
@@ -329,7 +329,7 @@ class QuotationController extends Controller
         $lineY = $y + 66;
         foreach (array_filter($lines) as $index => $line) {
             $this->drawWrappedText($image, $line, $lineSize, $x + 16, $lineY, $w - 32, $black, $index === 0 ? $bold : $font);
-            $lineY += $lineSize + 16;
+            $lineY += $lineSize + $lineGap;
         }
     }
 
