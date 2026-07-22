@@ -19,7 +19,17 @@ const startupLog = path.join(app.getPath('userData'), 'startup.log');
 
 function logStartup(message, error = null) {
   const detail = error ? ` ${error.stack || error.message || error}` : '';
-  fs.appendFileSync(startupLog, `[${new Date().toISOString()}] ${message}${detail}\n`);
+  try {
+    fs.appendFileSync(startupLog, `[${new Date().toISOString()}] ${message}${detail}\n`);
+  } catch (e) {
+    // If we can't write to log, at least try to create it
+    try {
+      fs.mkdirSync(path.dirname(startupLog), { recursive: true });
+      fs.appendFileSync(startupLog, `[${new Date().toISOString()}] ${message}${detail}\n`);
+    } catch (e2) {
+      console.error(`Failed to write startup log: ${message}`, error);
+    }
+  }
 }
 
 process.on('uncaughtException', (error) => logStartup('uncaughtException', error));
@@ -48,7 +58,24 @@ function getRuntimePaths() {
 }
 
 function ensureDirectory(dir) {
-  fs.mkdirSync(dir, { recursive: true });
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+  } catch (error) {
+    logStartup(`Failed to create directory: ${dir}`, error);
+    // Try alternative approach if in Program Files
+    if (dir.includes('Program Files')) {
+      const userDataDir = dir.replace(/.*Program Files.*Printa Signages/, path.join(app.getPath('userData'), 'app'));
+      try {
+        fs.mkdirSync(userDataDir, { recursive: true });
+        logStartup(`Created alternative directory in userData: ${userDataDir}`);
+        return userDataDir;
+      } catch (e2) {
+        logStartup(`Failed to create alternative directory: ${userDataDir}`, e2);
+      }
+    }
+    throw error;
+  }
+  return dir;
 }
 
 function syncLaravelApp(source, target) {
@@ -93,13 +120,21 @@ function ensureLaravelStorage(target) {
   dirs.forEach((dir) => {
     const fullPath = path.join(target, dir);
     try {
-      ensureDirectory(fullPath);
-      logStartup(`Created directory: ${dir}`);
+      const createdPath = ensureDirectory(fullPath);
+      logStartup(`Created directory: ${dir} at ${createdPath}`);
     } catch (error) {
       logStartup(`Failed to create directory: ${dir}`, error);
-      throw error;
+      // Don't throw - continue with other directories
     }
   });
+
+  // Create a .gitkeep file in logs to ensure the folder isn't empty
+  try {
+    fs.writeFileSync(path.join(target, 'storage/logs', '.gitkeep'), '');
+    logStartup('Created .gitkeep in logs directory');
+  } catch (error) {
+    logStartup('Failed to create .gitkeep in logs', error);
+  }
 }
 
 function writeJsonConfig() {
@@ -217,17 +252,21 @@ async function prepareRuntime() {
   const lanIp = getLanIp();
   resolvedLanUrl = lanIp === '127.0.0.1' ? null : `http://${lanIp}:${HTTP_PORT}`;
 
+  logStartup('Preparing runtime environment');
   ensureDirectory(runtimePaths.dataRoot);
   ensureDirectory(runtimePaths.backups);
   ensureDirectory(path.dirname(runtimePaths.sqliteDatabase));
   writeJsonConfig();
 
   if (!isDev) {
+    logStartup('Syncing Laravel app from source');
     syncLaravelApp(runtimePaths.laravelSource, runtimePaths.laravelApp);
     if (!fs.existsSync(runtimePaths.sqliteDatabase)) {
+      logStartup('Creating new SQLite database');
       fs.writeFileSync(runtimePaths.sqliteDatabase, '');
     }
     ensureLaravelEnv();
+    logStartup('Runtime preparation complete');
   }
 }
 
@@ -249,18 +288,41 @@ async function migrateAndSeedFirstRun() {
 
   const marker = path.join(runtimePaths.dataRoot, '.database-ready');
 
-  await runArtisan(['storage:link']);
-  await runArtisan(['config:clear']);
+  try {
+    logStartup('Running storage:link');
+    await runArtisan(['storage:link']);
+    logStartup('Running config:clear');
+    await runArtisan(['config:clear']);
+  } catch (error) {
+    logStartup('Warning: Failed to run storage:link or config:clear', error);
+    // Continue anyway - these are not critical
+  }
 
   if (!fs.existsSync(marker)) {
-    await runArtisan(['key:generate', '--force']);
-    await runArtisan(['migrate', '--force']);
-    await runArtisan(['db:seed', '--force']);
-    fs.writeFileSync(marker, new Date().toISOString());
+    try {
+      logStartup('First run - generating key');
+      await runArtisan(['key:generate', '--force']);
+      logStartup('Running migrations');
+      await runArtisan(['migrate', '--force']);
+      logStartup('Running database seed');
+      await runArtisan(['db:seed', '--force']);
+      fs.writeFileSync(marker, new Date().toISOString());
+      logStartup('Database setup complete');
+    } catch (error) {
+      logStartup('Failed to setup database', error);
+      throw error;
+    }
     return;
   }
 
-  await runArtisan(['migrate', '--force']);
+  try {
+    logStartup('Running migrations');
+    await runArtisan(['migrate', '--force']);
+    logStartup('Migrations complete');
+  } catch (error) {
+    logStartup('Failed to run migrations', error);
+    throw error;
+  }
 }
 
 function writeApacheConfig() {
@@ -309,6 +371,7 @@ async function startWebServer() {
     throw new Error(`Portable PHP was not found at ${runtimePaths.php}`);
   }
 
+  logStartup(`Starting PHP server on port ${HTTP_PORT}`);
   phpProcess = spawn(runtimePaths.php, [
     '-S',
     `0.0.0.0:${HTTP_PORT}`,
@@ -320,7 +383,17 @@ async function startWebServer() {
     windowsHide: true,
     stdio: isDev ? 'inherit' : 'ignore',
   });
+
+  phpProcess.on('error', (error) => {
+    logStartup('PHP process error', error);
+  });
+
+  phpProcess.on('exit', (code, signal) => {
+    logStartup(`PHP process exited with code ${code}, signal ${signal}`);
+  });
+
   await waitForPort(HTTP_PORT);
+  logStartup('PHP server started successfully');
 }
 
 async function createBackup() {
