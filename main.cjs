@@ -78,15 +78,28 @@ function syncLaravelApp(source, target) {
 }
 
 function ensureLaravelStorage(target) {
-  [
+  const dirs = [
+    'storage/app',
     'storage/app/public',
+    'storage/framework',
     'storage/framework/cache',
     'storage/framework/cache/data',
     'storage/framework/sessions',
     'storage/framework/views',
     'storage/logs',
     'bootstrap/cache',
-  ].forEach((dir) => ensureDirectory(path.join(target, dir)));
+  ];
+
+  dirs.forEach((dir) => {
+    const fullPath = path.join(target, dir);
+    try {
+      ensureDirectory(fullPath);
+      logStartup(`Created directory: ${dir}`);
+    } catch (error) {
+      logStartup(`Failed to create directory: ${dir}`, error);
+      throw error;
+    }
+  });
 }
 
 function writeJsonConfig() {

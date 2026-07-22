@@ -42,7 +42,9 @@ Remove-Item -LiteralPath (Join-Path $stage "database\database.sqlite") -Force -E
 Remove-Item -LiteralPath (Join-Path $stage "public\storage") -Recurse -Force -ErrorAction SilentlyContinue
 
 $storageDirs = @(
+    "storage\app",
     "storage\app\public",
+    "storage\framework",
     "storage\framework\cache",
     "storage\framework\cache\data",
     "storage\framework\sessions",
