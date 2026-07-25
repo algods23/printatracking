@@ -61,7 +61,11 @@ class TaskController extends Controller
         ]);
 
         $validated = $request->validate([
-            'customer_name'     => 'required|string|max:255',
+            'customer_name'     => [
+                'required_unless:is_walkin,true',
+                'string',
+                'max:255',
+            ],
             'contact_number'    => 'nullable|string|max:20',
             'product_type'      => 'nullable|in:Signage,Sticker,Banner,Label,Other',
             'signage_type'      => 'nullable|in:Digital,Vinyl,Neon,LED,Wooden,Metal,Other',
@@ -87,6 +91,11 @@ class TaskController extends Controller
         ]);
 
         $validated['product_type'] = $validated['product_type'] ?? 'Other';
+
+        // Handle walk-in customer
+        if ($request->boolean('is_walkin')) {
+            $validated['customer_name'] = 'walk-in';
+        }
 
         if (! Auth::user()->isAdmin()) {
             $validated['assigned_to'] = Auth::id();
