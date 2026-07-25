@@ -15,6 +15,24 @@ let resolvedLanUrl = null;
 let runtimePaths;
 
 const isDev = !app.isPackaged;
+const startupLog = path.join(app.getPath('userData'), 'startup.log');
+
+function logStartup(message, error = null) {
+  const detail = error ? ` ${error.stack || error.message || error}` : '';
+  try {
+    fs.appendFileSync(startupLog, `[${new Date().toISOString()}] ${message}${detail}\n`);
+  } catch (e) {
+    try {
+      fs.mkdirSync(path.dirname(startupLog), { recursive: true });
+      fs.appendFileSync(startupLog, `[${new Date().toISOString()}] ${message}${detail}\n`);
+    } catch (e2) {
+      console.error(`Failed to write startup log: ${message}`, error);
+    }
+  }
+}
+
+process.on('uncaughtException', (error) => logStartup('uncaughtException', error));
+process.on('unhandledRejection', (error) => logStartup('unhandledRejection', error));
 
 function appRoot() {
   return isDev ? path.resolve(__dirname, '..') : process.resourcesPath;
@@ -25,7 +43,7 @@ function getRuntimePaths() {
   const dataRoot = path.join(app.getPath('userData'), 'runtime');
   const laravelSource = isDev ? root : path.join(root, 'laravel-app');
 
-  return {
+  const paths = {
     root,
     dataRoot,
     appData: app.getPath('userData'),
@@ -36,10 +54,32 @@ function getRuntimePaths() {
     php: isDev ? 'php' : path.join(root, 'runtime', 'php', 'php.exe'),
     sqliteDatabase: path.join(dataRoot, 'database', 'database.sqlite'),
   };
+
+  if (fs.existsSync(paths.configFile)) {
+    try {
+      const config = JSON.parse(fs.readFileSync(paths.configFile, 'utf8'));
+      if (config.database && fs.existsSync(config.database)) {
+        paths.sqliteDatabase = config.database;
+      }
+      if (config.backupFolder && fs.existsSync(config.backupFolder)) {
+        paths.backups = config.backupFolder;
+      }
+    } catch (error) {
+      logStartup('Failed to read config.json, using dynamic paths', error);
+    }
+  }
+
+  return paths;
 }
 
 function ensureDirectory(dir) {
-  fs.mkdirSync(dir, { recursive: true });
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+  } catch (error) {
+    logStartup(`Failed to create directory: ${dir}`, error);
+    throw error;
+  }
+  return dir;
 }
 
 function syncLaravelApp(source, target) {
@@ -70,31 +110,52 @@ function syncLaravelApp(source, target) {
 
 function ensureLaravelStorage(target) {
   [
+    'storage/app',
     'storage/app/public',
+    'storage/framework',
     'storage/framework/cache',
     'storage/framework/cache/data',
     'storage/framework/sessions',
     'storage/framework/views',
     'storage/logs',
     'bootstrap/cache',
-  ].forEach((dir) => ensureDirectory(path.join(target, dir)));
+  ].forEach((dir) => {
+    try {
+      ensureDirectory(path.join(target, dir));
+    } catch (error) {
+      logStartup(`Failed to create directory: ${dir}`, error);
+    }
+  });
+
+  try {
+    fs.writeFileSync(path.join(target, 'storage/logs', '.gitkeep'), '');
+  } catch (error) {
+    logStartup('Failed to create .gitkeep in logs', error);
+  }
 }
 
 function writeJsonConfig() {
+  const config = {
+    appName: APP_NAME,
+    httpPort: HTTP_PORT,
+    database: runtimePaths.sqliteDatabase,
+    installedAt: new Date().toISOString(),
+    backupFolder: runtimePaths.backups,
+  };
+
   if (fs.existsSync(runtimePaths.configFile)) {
-    return;
+    try {
+      const existingConfig = JSON.parse(fs.readFileSync(runtimePaths.configFile, 'utf8'));
+      if (existingConfig.installedAt) {
+        config.installedAt = existingConfig.installedAt;
+      }
+    } catch (error) {
+      logStartup('Failed to read existing config for installation date', error);
+    }
   }
 
-  fs.writeFileSync(
-    runtimePaths.configFile,
-    JSON.stringify({
-      appName: APP_NAME,
-      httpPort: HTTP_PORT,
-      database: runtimePaths.sqliteDatabase,
-      installedAt: new Date().toISOString(),
-      backupFolder: runtimePaths.backups,
-    }, null, 2),
-  );
+  fs.writeFileSync(runtimePaths.configFile, JSON.stringify(config, null, 2));
+  logStartup('Config file updated with dynamic paths');
 }
 
 function ensureLaravelEnv() {
@@ -131,7 +192,33 @@ function ensureLaravelEnv() {
     next = pattern.test(next) ? next.replace(pattern, line) : `${next.trimEnd()}\n${line}\n`;
   }
 
+  if (!/^APP_KEY=/m.test(next)) {
+    next = `APP_KEY=\n${next.trimStart()}`;
+  }
+
   fs.writeFileSync(envPath, next);
+}
+
+function readEnvValue(key) {
+  const envPath = path.join(runtimePaths.laravelApp, '.env');
+  if (!fs.existsSync(envPath)) {
+    return null;
+  }
+
+  const match = fs.readFileSync(envPath, 'utf8').match(new RegExp(`^${key}=(.*)$`, 'm'));
+  if (!match) {
+    return null;
+  }
+
+  return match[1].trim().replace(/^["']|["']$/g, '');
+}
+
+function clearStaleConfigCache() {
+  const configCache = path.join(runtimePaths.laravelApp, 'bootstrap/cache/config.php');
+  if (fs.existsSync(configCache)) {
+    fs.unlinkSync(configCache);
+    logStartup('Removed stale config cache');
+  }
 }
 
 function quoteEnv(value) {
@@ -195,17 +282,22 @@ async function prepareRuntime() {
   const lanIp = getLanIp();
   resolvedLanUrl = lanIp === '127.0.0.1' ? null : `http://${lanIp}:${HTTP_PORT}`;
 
+  logStartup('Preparing runtime environment');
   ensureDirectory(runtimePaths.dataRoot);
   ensureDirectory(runtimePaths.backups);
   ensureDirectory(path.dirname(runtimePaths.sqliteDatabase));
   writeJsonConfig();
 
   if (!isDev) {
+    logStartup('Syncing Laravel app from source');
     syncLaravelApp(runtimePaths.laravelSource, runtimePaths.laravelApp);
     if (!fs.existsSync(runtimePaths.sqliteDatabase)) {
+      logStartup('Creating new SQLite database');
       fs.writeFileSync(runtimePaths.sqliteDatabase, '');
     }
     ensureLaravelEnv();
+    clearStaleConfigCache();
+    logStartup('Runtime preparation complete');
   }
 }
 
@@ -227,18 +319,50 @@ async function migrateAndSeedFirstRun() {
 
   const marker = path.join(runtimePaths.dataRoot, '.database-ready');
 
-  await runArtisan(['storage:link']);
-  await runArtisan(['config:clear']);
+  try {
+    logStartup('Running storage:link');
+    await runArtisan(['storage:link']);
+    logStartup('Running config:clear');
+    await runArtisan(['config:clear']);
+  } catch (error) {
+    logStartup('Warning: Failed to run storage:link or config:clear', error);
+  }
+
+  const appKey = readEnvValue('APP_KEY');
+  if (!appKey || !appKey.startsWith('base64:')) {
+    try {
+      logStartup('APP_KEY missing - generating');
+      await runArtisan(['key:generate', '--force']);
+    } catch (error) {
+      logStartup('Failed to generate APP_KEY', error);
+      throw error;
+    }
+  }
 
   if (!fs.existsSync(marker)) {
-    await runArtisan(['key:generate', '--force']);
-    await runArtisan(['migrate', '--force']);
-    await runArtisan(['db:seed', '--force']);
-    fs.writeFileSync(marker, new Date().toISOString());
+    try {
+      logStartup('First run - setting up database');
+      logStartup('Running migrations');
+      await runArtisan(['migrate', '--force']);
+      logStartup('Running database seed');
+      await runArtisan(['db:seed', '--force']);
+      fs.writeFileSync(marker, new Date().toISOString());
+      logStartup('Database setup complete');
+    } catch (error) {
+      logStartup('Failed to setup database', error);
+      throw error;
+    }
     return;
   }
 
-  await runArtisan(['migrate', '--force']);
+  try {
+    logStartup('Running migrations');
+    await runArtisan(['migrate', '--force']);
+    logStartup('Migrations complete');
+  } catch (error) {
+    logStartup('Failed to run migrations', error);
+    throw error;
+  }
 }
 
 function writeApacheConfig() {
@@ -287,6 +411,7 @@ async function startWebServer() {
     throw new Error(`Portable PHP was not found at ${runtimePaths.php}`);
   }
 
+  logStartup(`Starting PHP server on port ${HTTP_PORT}`);
   phpProcess = spawn(runtimePaths.php, [
     '-S',
     `0.0.0.0:${HTTP_PORT}`,
@@ -298,7 +423,17 @@ async function startWebServer() {
     windowsHide: true,
     stdio: isDev ? 'inherit' : 'ignore',
   });
+
+  phpProcess.on('error', (error) => {
+    logStartup('PHP process error', error);
+  });
+
+  phpProcess.on('exit', (code, signal) => {
+    logStartup(`PHP process exited with code ${code}, signal ${signal}`);
+  });
+
   await waitForPort(HTTP_PORT);
+  logStartup('PHP server started successfully');
 }
 
 async function createBackup() {
@@ -399,12 +534,19 @@ async function shutdown() {
 
 app.whenReady().then(async () => {
   try {
+    logStartup('startup begin');
     await prepareRuntime();
+    logStartup('runtime prepared');
     await migrateAndSeedFirstRun();
+    logStartup('database migrated');
     await startWebServer();
+    logStartup('web server started');
     createWindow();
+    logStartup('window created');
     createMenu();
+    logStartup('menu created');
   } catch (error) {
+    logStartup('startup failed', error);
     dialog.showErrorBox(APP_NAME, `${error.message}\n\nThe application will close.`);
     app.quit();
   }

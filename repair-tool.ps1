@@ -1,171 +1,213 @@
 # Printa Signages Repair Tool
-# This script repairs the installation without deleting user data
+# Fixes the runtime data in AppData (where the live app actually runs)
 
 param(
     [string]$InstallPath = "C:\Program Files\Printa Signages"
 )
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "Printa Signages Repair Tool" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Check if installation exists
-if (-not (Test-Path $InstallPath)) {
-    Write-Host "ERROR: Installation not found at $InstallPath" -ForegroundColor Red
-    exit 1
-}
-
-Write-Host "Installation found at: $InstallPath" -ForegroundColor Green
-Write-Host ""
-
-# Define Laravel app path
-$laravelPath = Join-Path $InstallPath "resources\laravel-app"
-
-if (-not (Test-Path $laravelPath)) {
-    Write-Host "ERROR: Laravel app not found at $laravelPath" -ForegroundColor Red
-    exit 1
-}
-
-Write-Host "Laravel app found at: $laravelPath" -ForegroundColor Green
-Write-Host ""
-
-# Create storage folder structure
-Write-Host "Creating storage folder structure..." -ForegroundColor Yellow
-
-$storageDirs = @(
-    "storage",
-    "storage\app",
-    "storage\app\public",
-    "storage\framework",
-    "storage\framework\cache",
-    "storage\framework\cache\data",
-    "storage\framework\sessions",
-    "storage\framework\views",
-    "storage\logs",
-    "bootstrap\cache"
-)
-
-foreach ($dir in $storageDirs) {
-    $fullPath = Join-Path $laravelPath $dir
-    try {
-        New-Item -ItemType Directory -Force -Path $fullPath | Out-Null
-        Write-Host "  Created: $dir" -ForegroundColor Green
-    } catch {
-        Write-Host "  Failed to create: $dir" -ForegroundColor Red
-        Write-Host "  Error: $_" -ForegroundColor Red
+function Find-AppDataPath {
+    foreach ($name in @("Printa Signages", "printa-signages")) {
+        $testPath = Join-Path $env:APPDATA $name
+        if (Test-Path $testPath) {
+            return $testPath
+        }
     }
+    return $null
 }
 
-Write-Host ""
+function Find-PhpExe {
+    param([string]$InstallPath)
 
-# Create .gitkeep file in logs
-try {
-    $gitkeepPath = Join-Path $laravelPath "storage\logs\.gitkeep"
-    New-Item -ItemType File -Force -Path $gitkeepPath | Out-Null
-    Write-Host "Created .gitkeep in logs directory" -ForegroundColor Green
-} catch {
-    Write-Host "Failed to create .gitkeep in logs" -ForegroundColor Yellow
-}
-
-Write-Host ""
-
-# Set permissions on storage folder
-Write-Host "Setting permissions on storage folder..." -ForegroundColor Yellow
-
-$storagePath = Join-Path $laravelPath "storage"
-
-try {
-    $acl = Get-Acl $storagePath
-    $accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule(
-        "Everyone",
-        "FullControl",
-        "ContainerInherit,ObjectInherit",
-        "None",
-        "Allow"
+    $candidates = @(
+        (Join-Path $InstallPath "resources\runtime\php\php.exe"),
+        (Join-Path $InstallPath "runtime\php\php.exe"),
+        "php"
     )
-    $acl.SetAccessRule($accessRule)
-    Set-Acl $storagePath $acl
-    Write-Host "Permissions set on storage folder" -ForegroundColor Green
-} catch {
-    Write-Host "Failed to set permissions (may require admin rights)" -ForegroundColor Yellow
-    Write-Host "You may need to run this script as Administrator" -ForegroundColor Yellow
-}
 
-Write-Host ""
-
-# Check if .env file exists
-$envPath = Join-Path $laravelPath ".env"
-$envDesktopPath = Join-Path $laravelPath ".env.desktop"
-
-if (-not (Test-Path $envPath) -and (Test-Path $envDesktopPath)) {
-    Write-Host "Creating .env from .env.desktop..." -ForegroundColor Yellow
-    try {
-        Copy-Item -LiteralPath $envDesktopPath -Destination $envPath -Force
-        Write-Host ".env file created" -ForegroundColor Green
-    } catch {
-        Write-Host "Failed to create .env file" -ForegroundColor Red
-    }
-}
-
-Write-Host ""
-
-# Clear Laravel caches if artisan exists
-$artisanPath = Join-Path $laravelPath "artisan"
-
-if (Test-Path $artisanPath) {
-    Write-Host "Clearing Laravel caches..." -ForegroundColor Yellow
-    
-    # Try to find PHP
-    $phpPaths = @(
-        "php",
-        Join-Path $InstallPath "runtime\php\php.exe"
-    )
-    
-    $phpExe = $null
-    foreach ($path in $phpPaths) {
+    foreach ($candidate in $candidates) {
         try {
-            $null = & $path --version 2>&1
-            $phpExe = $path
-            break
+            $null = & $candidate --version 2>&1
+            return $candidate
         } catch {
             continue
         }
     }
-    
-    if ($phpExe) {
-        try {
-            & $phpExe artisan cache:clear --cwd $laravelPath 2>&1 | Out-Null
-            Write-Host "  Cache cleared" -ForegroundColor Green
-        } catch {
-            Write-Host "  Failed to clear cache (non-critical)" -ForegroundColor Yellow
-        }
-        
-        try {
-            & $phpExe artisan config:clear --cwd $laravelPath 2>&1 | Out-Null
-            Write-Host "  Config cleared" -ForegroundColor Green
-        } catch {
-            Write-Host "  Failed to clear config (non-critical)" -ForegroundColor Yellow
-        }
-        
-        try {
-            & $phpExe artisan route:clear --cwd $laravelPath 2>&1 | Out-Null
-            Write-Host "  Routes cleared" -ForegroundColor Green
-        } catch {
-            Write-Host "  Failed to clear routes (non-critical)" -ForegroundColor Yellow
-        }
-        
-        try {
-            & $phpExe artisan view:clear --cwd $laravelPath 2>&1 | Out-Null
-            Write-Host "  Views cleared" -ForegroundColor Green
-        } catch {
-            Write-Host "  Failed to clear views (non-critical)" -ForegroundColor Yellow
-        }
-    } else {
-        Write-Host "PHP not found, skipping cache clear" -ForegroundColor Yellow
+
+    return $null
+}
+
+function Repair-LaravelPath {
+    param(
+        [string]$LaravelPath,
+        [string]$DatabasePath,
+        [string]$PhpExe
+    )
+
+    if (-not (Test-Path $LaravelPath)) {
+        Write-Host "  Laravel path not found: $LaravelPath" -ForegroundColor Yellow
+        return
     }
+
+    Write-Host "  Repairing: $LaravelPath" -ForegroundColor Cyan
+
+    $storageDirs = @(
+        "storage",
+        "storage\app",
+        "storage\app\public",
+        "storage\framework",
+        "storage\framework\cache",
+        "storage\framework\cache\data",
+        "storage\framework\sessions",
+        "storage\framework\views",
+        "storage\logs",
+        "bootstrap\cache"
+    )
+
+    foreach ($dir in $storageDirs) {
+        $fullPath = Join-Path $LaravelPath $dir
+        try {
+            New-Item -ItemType Directory -Force -Path $fullPath | Out-Null
+            Write-Host "    OK: $dir" -ForegroundColor Green
+        } catch {
+            Write-Host "    FAIL: $dir - $_" -ForegroundColor Red
+        }
+    }
+
+    try {
+        New-Item -ItemType File -Force -Path (Join-Path $LaravelPath "storage\logs\.gitkeep") | Out-Null
+    } catch {}
+
+    $envPath = Join-Path $LaravelPath ".env"
+    $envDesktopPath = Join-Path $LaravelPath ".env.desktop"
+
+    if (-not (Test-Path $envPath) -and (Test-Path $envDesktopPath)) {
+        Copy-Item -LiteralPath $envDesktopPath -Destination $envPath -Force
+        Write-Host "    Created .env from .env.desktop" -ForegroundColor Green
+    }
+
+    if (Test-Path $envPath) {
+        $envContent = Get-Content $envPath -Raw
+        $dbPathForEnv = $DatabasePath -replace '\\', '/'
+
+        if ($envContent -match '(?m)^DB_DATABASE=.*$') {
+            $envContent = $envContent -replace '(?m)^DB_DATABASE=.*$', "DB_DATABASE=$dbPathForEnv"
+        } else {
+            $envContent = $envContent.TrimEnd() + "`nDB_DATABASE=$dbPathForEnv`n"
+        }
+
+        Set-Content -Path $envPath -Value $envContent -NoNewline
+        Write-Host "    Updated DB_DATABASE in .env" -ForegroundColor Green
+    }
+
+    $configCache = Join-Path $LaravelPath "bootstrap\cache\config.php"
+    if (Test-Path $configCache) {
+        Remove-Item $configCache -Force
+        Write-Host "    Removed stale config cache" -ForegroundColor Green
+    }
+
+    $artisanPath = Join-Path $LaravelPath "artisan"
+    if ($PhpExe -and (Test-Path $artisanPath)) {
+        Push-Location $LaravelPath
+        try {
+            foreach ($cmd in @("config:clear", "cache:clear", "route:clear", "view:clear")) {
+                try {
+                    & $PhpExe artisan $cmd 2>&1 | Out-Null
+                    Write-Host "    Cleared: $cmd" -ForegroundColor Green
+                } catch {
+                    Write-Host "    Skipped: $cmd" -ForegroundColor Yellow
+                }
+            }
+
+            $envCheck = Get-Content $envPath -Raw -ErrorAction SilentlyContinue
+            if ($envCheck -and $envCheck -notmatch '(?m)^APP_KEY=base64:.+$') {
+                if ($envCheck -notmatch '(?m)^APP_KEY=') {
+                    $envCheck = "APP_KEY=`n" + $envCheck
+                    Set-Content $envPath $envCheck -NoNewline
+                }
+                & $PhpExe artisan key:generate --force 2>&1 | Out-Null
+                Write-Host "    Generated missing APP_KEY" -ForegroundColor Green
+            }
+        } finally {
+            Pop-Location
+        }
+    }
+}
+
+$appDataPath = Find-AppDataPath
+
+if (-not $appDataPath) {
+    Write-Host "ERROR: Printa Signages AppData folder not found." -ForegroundColor Red
+    Write-Host "Expected: $env:APPDATA\Printa Signages" -ForegroundColor Yellow
+    exit 1
+}
+
+Write-Host "AppData found at: $appDataPath" -ForegroundColor Green
+
+$runtimeLaravelPath = Join-Path $appDataPath "runtime\laravel-app"
+$databasePath = Join-Path $appDataPath "runtime\database\database.sqlite"
+$configPath = Join-Path $appDataPath "config.json"
+$backupFolder = Join-Path $env:USERPROFILE "Documents\Printa Signages\backups"
+
+Write-Host ""
+Write-Host "Fixing config.json..." -ForegroundColor Yellow
+
+$config = @{
+    appName = "Printa Signages"
+    httpPort = 8000
+    database = $databasePath
+    backupFolder = $backupFolder
+    installedAt = (Get-Date).ToString("o")
+}
+
+if (Test-Path $configPath) {
+    try {
+        $existing = Get-Content $configPath -Raw | ConvertFrom-Json
+        if ($existing.installedAt) {
+            $config.installedAt = $existing.installedAt
+        }
+    } catch {}
+}
+
+$config | ConvertTo-Json -Depth 10 | Set-Content $configPath
+Write-Host "  config.json updated" -ForegroundColor Green
+
+Write-Host ""
+Write-Host "Ensuring database folder exists..." -ForegroundColor Yellow
+$dbDir = Split-Path $databasePath -Parent
+New-Item -ItemType Directory -Force -Path $dbDir | Out-Null
+New-Item -ItemType Directory -Force -Path $backupFolder | Out-Null
+
+if (-not (Test-Path $databasePath)) {
+    Write-Host "  WARNING: database.sqlite is missing!" -ForegroundColor Red
+    Write-Host "  Expected: $databasePath" -ForegroundColor Yellow
+    Write-Host "  Copy the database from the old computer into this folder." -ForegroundColor Yellow
+} else {
+    $size = (Get-Item $databasePath).Length
+    Write-Host "  Database found ($size bytes)" -ForegroundColor Green
+}
+
+$phpExe = Find-PhpExe -InstallPath $InstallPath
+if ($phpExe) {
+    Write-Host "  PHP found: $phpExe" -ForegroundColor Green
+} else {
+    Write-Host "  PHP not found - storage folders will still be repaired" -ForegroundColor Yellow
+}
+
+Write-Host ""
+Write-Host "Repairing runtime Laravel app..." -ForegroundColor Yellow
+Repair-LaravelPath -LaravelPath $runtimeLaravelPath -DatabasePath $databasePath -PhpExe $phpExe
+
+if (Test-Path (Join-Path $InstallPath "resources\laravel-app")) {
+    Write-Host ""
+    Write-Host "Repairing install copy (optional)..." -ForegroundColor Yellow
+    Repair-LaravelPath -LaravelPath (Join-Path $InstallPath "resources\laravel-app") -DatabasePath $databasePath -PhpExe $phpExe
 }
 
 Write-Host ""
@@ -173,12 +215,6 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "Repair Complete!" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "The following actions were performed:" -ForegroundColor White
-Write-Host "  - Created all required storage folders" -ForegroundColor White
-Write-Host "  - Set permissions on storage folder" -ForegroundColor White
-Write-Host "  - Created .env file if missing" -ForegroundColor White
-Write-Host "  - Cleared Laravel caches" -ForegroundColor White
-Write-Host ""
-Write-Host "Your data has NOT been deleted." -ForegroundColor Green
-Write-Host "Please restart the Printa Signages application." -ForegroundColor Yellow
+Write-Host "Your data was NOT deleted." -ForegroundColor Green
+Write-Host "Please restart Printa Signages." -ForegroundColor Yellow
 Write-Host ""

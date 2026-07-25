@@ -63,7 +63,7 @@
                 <!-- Due Date -->
                 <div class="md:col-span-2">
                     <label for="due_date" class="block text-sm font-medium text-gray-900 dark:text-white mb-2"><span class="duedate-required">Due Date *</span></label>
-                    <input type="date" id="due_date" name="due_date" value="{{ old('due_date', date('Y-m-d')) }}" required
+                    <input type="date" id="due_date" name="due_date" value="{{ old('due_date', date('Y-m-d')) }}"
                         min="{{ date('Y-m-d') }}"
                         class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('due_date') border-red-500 @enderror" />
                     @error('due_date')
@@ -75,7 +75,7 @@
                 <!-- Priority -->
                 <div class="md:col-span-2">
                     <label for="priority" class="block text-sm font-medium text-gray-900 dark:text-white mb-2"><span class="priority-required">Priority *</span></label>
-                    <select id="priority" name="priority" required class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('priority') border-red-500 @enderror">
+                    <select id="priority" name="priority" class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 @error('priority') border-red-500 @enderror">
                         <option value="">Select priority</option>
                         <option value="Low" {{ old('priority') == 'Low' ? 'selected' : '' }}>Low</option>
                         <option value="Urgent" {{ old('priority') == 'Urgent' ? 'selected' : '' }}>Urgent</option>

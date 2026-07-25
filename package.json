@@ -66,6 +66,30 @@
                 "filter": [
                     "**/*"
                 ]
+            },
+            {
+                "from": "migrate-data.ps1",
+                "to": "migrate-data.ps1"
+            },
+            {
+                "from": "repair-tool.ps1",
+                "to": "repair-tool.ps1"
+            },
+            {
+                "from": "collect-diagnostics.ps1",
+                "to": "collect-diagnostics.ps1"
+            },
+            {
+                "from": "fix-500.ps1",
+                "to": "fix-500.ps1"
+            },
+            {
+                "from": "deep-fix.ps1",
+                "to": "deep-fix.ps1"
+            },
+            {
+                "from": "fix-app-key.ps1",
+                "to": "fix-app-key.ps1"
             }
         ],
         "win": {

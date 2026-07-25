@@ -44,7 +44,7 @@ function getRuntimePaths() {
   const dataRoot = path.join(app.getPath('userData'), 'runtime');
   const laravelSource = isDev ? root : path.join(root, 'laravel-app');
 
-  return {
+  const paths = {
     root,
     dataRoot,
     appData: app.getPath('userData'),
@@ -55,6 +55,24 @@ function getRuntimePaths() {
     php: isDev ? 'php' : path.join(root, 'runtime', 'php', 'php.exe'),
     sqliteDatabase: path.join(dataRoot, 'database', 'database.sqlite'),
   };
+
+  // Read existing config if it exists, but don't rely on hardcoded paths
+  if (fs.existsSync(paths.configFile)) {
+    try {
+      const config = JSON.parse(fs.readFileSync(paths.configFile, 'utf8'));
+      // Only use config values if they exist and are valid, otherwise use dynamic paths
+      if (config.database && fs.existsSync(config.database)) {
+        paths.sqliteDatabase = config.database;
+      }
+      if (config.backupFolder && fs.existsSync(config.backupFolder)) {
+        paths.backups = config.backupFolder;
+      }
+    } catch (error) {
+      logStartup('Failed to read config.json, using dynamic paths', error);
+    }
+  }
+
+  return paths;
 }
 
 function ensureDirectory(dir) {
@@ -138,20 +156,32 @@ function ensureLaravelStorage(target) {
 }
 
 function writeJsonConfig() {
+  // Always update config.json with current dynamic paths
+  const config = {
+    appName: APP_NAME,
+    httpPort: HTTP_PORT,
+    database: runtimePaths.sqliteDatabase,
+    installedAt: new Date().toISOString(),
+    backupFolder: runtimePaths.backups,
+  };
+
+  // If config exists, preserve the original installation date
   if (fs.existsSync(runtimePaths.configFile)) {
-    return;
+    try {
+      const existingConfig = JSON.parse(fs.readFileSync(runtimePaths.configFile, 'utf8'));
+      if (existingConfig.installedAt) {
+        config.installedAt = existingConfig.installedAt;
+      }
+    } catch (error) {
+      logStartup('Failed to read existing config for installation date', error);
+    }
   }
 
   fs.writeFileSync(
     runtimePaths.configFile,
-    JSON.stringify({
-      appName: APP_NAME,
-      httpPort: HTTP_PORT,
-      database: runtimePaths.sqliteDatabase,
-      installedAt: new Date().toISOString(),
-      backupFolder: runtimePaths.backups,
-    }, null, 2),
+    JSON.stringify(config, null, 2),
   );
+  logStartup('Config file updated with dynamic paths');
 }
 
 function ensureLaravelEnv() {
@@ -186,6 +216,10 @@ function ensureLaravelEnv() {
     const line = `${key}=${quoteEnv(value)}`;
     const pattern = new RegExp(`^${key}=.*$`, 'm');
     next = pattern.test(next) ? next.replace(pattern, line) : `${next.trimEnd()}\n${line}\n`;
+  }
+
+  if (!/^APP_KEY=/m.test(next)) {
+    next = `APP_KEY=\n${next.trimStart()}`;
   }
 
   fs.writeFileSync(envPath, next);

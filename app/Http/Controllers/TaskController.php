@@ -12,9 +12,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class TaskController extends Controller
 {
+    private const PAYMENT_METHODS = [
+        'Cash',
+        'Card',
+        'Check',
+        'Bank Transfer',
+        'GCash',
+        'Maya',
+        'Credit Card',
+        'Other',
+    ];
     public function index(Request $request)
     {
         $query = $this->filteredTasksQuery($request);
@@ -37,26 +48,42 @@ class TaskController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge([
+            'assigned_to'      => $request->input('assigned_to') ?: null,
+            'contact_number'   => $request->input('contact_number') ?: null,
+            'due_date'         => $request->input('due_date') ?: null,
+            'priority'         => $request->input('priority') ?: null,
+            'payment_method'   => $request->input('payment_method') ?: null,
+            'reference_number' => $request->input('reference_number') ?: null,
+            'payment_amount'   => $request->input('payment_amount') === '' || $request->input('payment_amount') === null
+                ? null
+                : $request->input('payment_amount'),
+        ]);
+
         $validated = $request->validate([
-            'customer_name'    => 'required|string|max:255',
-            'contact_number'   => 'nullable|string|max:20',
-            'product_type'     => 'nullable|in:Signage,Sticker,Banner,Label,Other',
-            'signage_type'     => 'nullable|in:Digital,Vinyl,Neon,LED,Wooden,Metal,Other',
-            'sticker_type'     => 'nullable|in:Vinyl,Paper,Label,Die-cut,Other',
-            'assigned_to'      => 'nullable|exists:users,id',
-            'due_date'         => 'nullable|date|after_or_equal:today',
-            'due_time'         => 'nullable|date_format:H:i',
-            'priority'         => 'nullable|in:Low,Medium,High,Urgent',
-            'notes'            => 'nullable|string',
-            'payment_amount'   => 'nullable|numeric|min:0',
-            'payment_method'   => 'nullable|in:Cash,Bank Transfer,GCash,Maya,Credit Card,Other',
-            'reference_number' => 'nullable|string',
-            'items'            => 'required|array|min:1',
+            'customer_name'     => 'required|string|max:255',
+            'contact_number'    => 'nullable|string|max:20',
+            'product_type'      => 'nullable|in:Signage,Sticker,Banner,Label,Other',
+            'signage_type'      => 'nullable|in:Digital,Vinyl,Neon,LED,Wooden,Metal,Other',
+            'sticker_type'      => 'nullable|in:Vinyl,Paper,Label,Die-cut,Other',
+            'assigned_to'       => ['nullable', Rule::exists('users', 'id')],
+            'due_date'          => 'nullable|date',
+            'due_time'          => 'nullable|date_format:H:i',
+            'priority'          => 'nullable|in:Low,Medium,High,Urgent',
+            'notes'             => 'nullable|string',
+            'payment_amount'    => 'nullable|numeric|min:0',
+            'payment_method'    => [
+                'nullable',
+                Rule::requiredIf(fn () => (float) $request->input('payment_amount', 0) > 0),
+                Rule::in(self::PAYMENT_METHODS),
+            ],
+            'reference_number'  => 'nullable|string|max:100',
+            'items'             => 'required|array|min:1',
             'items.*.job_order' => 'required|string|max:255',
             'items.*.quantity'  => 'required|integer|min:1',
             'items.*.price'     => 'required|numeric|min:0',
-            'attachments'      => 'nullable|array',
-            'attachments.*'    => 'file|max:51200',
+            'attachments'       => 'nullable|array',
+            'attachments.*'     => 'file|max:51200',
         ]);
 
         $validated['product_type'] = $validated['product_type'] ?? 'Other';
@@ -89,7 +116,7 @@ class TaskController extends Controller
         }
 
         $initialPayment = (float) ($validated['payment_amount'] ?? 0);
-        $paymentMethod = $validated['payment_method'];
+        $paymentMethod = $validated['payment_method'] ?? 'Cash';
         $referenceNumber = $validated['reference_number'] ?? null;
         unset($validated['payment_amount'], $validated['payment_method'], $validated['reference_number']);
 

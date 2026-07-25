@@ -81,8 +81,9 @@ class Task extends Model
         $this->attributes['customer_name'] = ucwords(strtolower($value));
     }
 
-    public function recordPayment(float $amount, string $paymentMethod, ?string $reference = null, ?int $issuedBy = null): ?Receipt
+    public function recordPayment(float $amount, ?string $paymentMethod = null, ?string $reference = null, ?int $issuedBy = null): ?Receipt
     {
+        $paymentMethod = $paymentMethod ?: 'Cash';
         $this->load('items');
 
         $paymentAmount = min($amount, $this->balance);
